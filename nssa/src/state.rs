@@ -3,7 +3,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use borsh::{BorshDeserialize, BorshSerialize};
 use nssa_core::{
     Commitment, CommitmentSetDigest, DUMMY_COMMITMENT, MembershipProof, Nullifier,
-    account::{Account, AccountId, Nonce},
+    account::{Account, AccountId},
     program::ProgramId,
 };
 
@@ -167,7 +167,7 @@ impl V02State {
 
         for account_id in tx.signer_account_ids() {
             let current_account = self.get_account_by_id_mut(account_id);
-            current_account.nonce.0 += 1;
+            current_account.nonce.public_account_nonce_increment();
         }
 
         Ok(())
@@ -203,7 +203,7 @@ impl V02State {
         // 5. Increment nonces for public signers
         for account_id in tx.signer_account_ids() {
             let current_account = self.get_account_by_id_mut(account_id);
-            current_account.nonce.0 += 1;
+            current_account.nonce.public_account_nonce_increment();
         }
 
         Ok(())
@@ -287,7 +287,7 @@ impl V02State {
                 balance: 1500,
                 // Difficulty: 3
                 data: vec![3; 33].try_into().expect("should fit"),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             },
         );
     }
@@ -345,7 +345,7 @@ pub mod tests {
         balance: u128,
     ) -> PublicTransaction {
         let account_ids = vec![from, to];
-        let nonces = vec![Nonce(nonce)];
+        let nonces = vec![nonce.into()];
         let program_id = Program::authenticated_transfer_program().id();
         let message =
             public_transaction::Message::try_new(program_id, account_ids, nonces, balance).unwrap();
@@ -561,7 +561,7 @@ pub mod tests {
                 ..Account::default()
             };
             let account_with_default_values_except_nonce = Account {
-                nonce: Nonce(37),
+                nonce: 37u128.into(),
                 ..Account::default()
             };
             let account_with_default_values_except_data = Account {
@@ -1052,7 +1052,7 @@ pub mod tests {
         let expected_sender_post = {
             let mut this = state.get_account_by_id(sender_keys.account_id());
             this.balance -= balance_to_move;
-            this.nonce.0 += 1;
+            this.nonce.public_account_nonce_increment();
             this
         };
 
@@ -2206,7 +2206,7 @@ pub mod tests {
         let message = public_transaction::Message::try_new(
             program.id(),
             vec![from, to],
-            vec![Nonce(0)],
+            vec![0u128.into()],
             amount,
         )
         .unwrap();
@@ -2249,7 +2249,7 @@ pub mod tests {
             program.id(),
             vec![to, from], // The chain_caller program permutes the account order in the chain
             // call
-            vec![Nonce(0)],
+            vec![0u128.into()],
             instruction,
         )
         .unwrap();
@@ -2288,7 +2288,7 @@ pub mod tests {
             program.id(),
             vec![to, from], // The chain_caller program permutes the account order in the chain
             // call
-            vec![Nonce(0)],
+            vec![0u128.into()],
             instruction,
         )
         .unwrap();
@@ -2556,7 +2556,7 @@ pub mod tests {
                     definition_id: IdForTests::token_a_definition_id(),
                     balance: BalanceForTests::user_token_a_holding_init(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2568,7 +2568,7 @@ pub mod tests {
                     definition_id: IdForTests::token_b_definition_id(),
                     balance: BalanceForTests::user_token_b_holding_init(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2588,7 +2588,7 @@ pub mod tests {
                     fees: 0u128,
                     active: true,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2601,7 +2601,7 @@ pub mod tests {
                     total_supply: BalanceForTests::token_a_supply(),
                     metadata_id: None,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2614,7 +2614,7 @@ pub mod tests {
                     total_supply: BalanceForTests::token_b_supply(),
                     metadata_id: None,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2627,7 +2627,7 @@ pub mod tests {
                     total_supply: BalanceForTests::token_lp_supply(),
                     metadata_id: None,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2639,7 +2639,7 @@ pub mod tests {
                     definition_id: IdForTests::token_a_definition_id(),
                     balance: BalanceForTests::vault_a_balance_init(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2651,7 +2651,7 @@ pub mod tests {
                     definition_id: IdForTests::token_b_definition_id(),
                     balance: BalanceForTests::vault_b_balance_init(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2663,7 +2663,7 @@ pub mod tests {
                     definition_id: IdForTests::token_lp_definition_id(),
                     balance: BalanceForTests::user_token_lp_holding_init(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2675,7 +2675,7 @@ pub mod tests {
                     definition_id: IdForTests::token_a_definition_id(),
                     balance: BalanceForTests::vault_a_balance_swap_1(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2687,7 +2687,7 @@ pub mod tests {
                     definition_id: IdForTests::token_b_definition_id(),
                     balance: BalanceForTests::vault_b_balance_swap_1(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2707,7 +2707,7 @@ pub mod tests {
                     fees: 0u128,
                     active: true,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2719,7 +2719,7 @@ pub mod tests {
                     definition_id: IdForTests::token_a_definition_id(),
                     balance: BalanceForTests::user_token_a_holding_swap_1(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2731,7 +2731,7 @@ pub mod tests {
                     definition_id: IdForTests::token_b_definition_id(),
                     balance: BalanceForTests::user_token_b_holding_swap_1(),
                 }),
-                nonce: Nonce(1),
+                nonce: 1u128.into(),
             }
         }
 
@@ -2743,7 +2743,7 @@ pub mod tests {
                     definition_id: IdForTests::token_a_definition_id(),
                     balance: BalanceForTests::vault_a_balance_swap_2(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2755,7 +2755,7 @@ pub mod tests {
                     definition_id: IdForTests::token_b_definition_id(),
                     balance: BalanceForTests::vault_b_balance_swap_2(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2775,7 +2775,7 @@ pub mod tests {
                     fees: 0u128,
                     active: true,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2787,7 +2787,7 @@ pub mod tests {
                     definition_id: IdForTests::token_a_definition_id(),
                     balance: BalanceForTests::user_token_a_holding_swap_2(),
                 }),
-                nonce: Nonce(1),
+                nonce: 1u128.into(),
             }
         }
 
@@ -2799,7 +2799,7 @@ pub mod tests {
                     definition_id: IdForTests::token_b_definition_id(),
                     balance: BalanceForTests::user_token_b_holding_swap_2(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2811,7 +2811,7 @@ pub mod tests {
                     definition_id: IdForTests::token_a_definition_id(),
                     balance: BalanceForTests::vault_a_balance_add(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2823,7 +2823,7 @@ pub mod tests {
                     definition_id: IdForTests::token_b_definition_id(),
                     balance: BalanceForTests::vault_b_balance_add(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2843,7 +2843,7 @@ pub mod tests {
                     fees: 0u128,
                     active: true,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2855,7 +2855,7 @@ pub mod tests {
                     definition_id: IdForTests::token_a_definition_id(),
                     balance: BalanceForTests::user_token_a_holding_add(),
                 }),
-                nonce: Nonce(1),
+                nonce: 1u128.into(),
             }
         }
 
@@ -2867,7 +2867,7 @@ pub mod tests {
                     definition_id: IdForTests::token_b_definition_id(),
                     balance: BalanceForTests::user_token_b_holding_add(),
                 }),
-                nonce: Nonce(1),
+                nonce: 1u128.into(),
             }
         }
 
@@ -2879,7 +2879,7 @@ pub mod tests {
                     definition_id: IdForTests::token_lp_definition_id(),
                     balance: BalanceForTests::user_token_lp_holding_add(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2892,7 +2892,7 @@ pub mod tests {
                     total_supply: BalanceForTests::token_lp_supply_add(),
                     metadata_id: None,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2904,7 +2904,7 @@ pub mod tests {
                     definition_id: IdForTests::token_a_definition_id(),
                     balance: BalanceForTests::vault_a_balance_remove(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2916,7 +2916,7 @@ pub mod tests {
                     definition_id: IdForTests::token_b_definition_id(),
                     balance: BalanceForTests::vault_b_balance_remove(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2936,7 +2936,7 @@ pub mod tests {
                     fees: 0u128,
                     active: true,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2948,7 +2948,7 @@ pub mod tests {
                     definition_id: IdForTests::token_a_definition_id(),
                     balance: BalanceForTests::user_token_a_holding_remove(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2960,7 +2960,7 @@ pub mod tests {
                     definition_id: IdForTests::token_b_definition_id(),
                     balance: BalanceForTests::user_token_b_holding_remove(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2972,7 +2972,7 @@ pub mod tests {
                     definition_id: IdForTests::token_lp_definition_id(),
                     balance: BalanceForTests::user_token_lp_holding_remove(),
                 }),
-                nonce: Nonce(1),
+                nonce: 1u128.into(),
             }
         }
 
@@ -2985,7 +2985,7 @@ pub mod tests {
                     total_supply: BalanceForTests::token_lp_supply_remove(),
                     metadata_id: None,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -2998,7 +2998,7 @@ pub mod tests {
                     total_supply: 0,
                     metadata_id: None,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -3010,7 +3010,7 @@ pub mod tests {
                     definition_id: IdForTests::token_a_definition_id(),
                     balance: 0,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -3022,7 +3022,7 @@ pub mod tests {
                     definition_id: IdForTests::token_b_definition_id(),
                     balance: 0,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -3042,7 +3042,7 @@ pub mod tests {
                     fees: 0u128,
                     active: false,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -3054,7 +3054,7 @@ pub mod tests {
                     definition_id: IdForTests::token_a_definition_id(),
                     balance: BalanceForTests::user_token_a_holding_new_definition(),
                 }),
-                nonce: Nonce(1),
+                nonce: 1u128.into(),
             }
         }
 
@@ -3066,7 +3066,7 @@ pub mod tests {
                     definition_id: IdForTests::token_b_definition_id(),
                     balance: BalanceForTests::user_token_b_holding_new_definition(),
                 }),
-                nonce: Nonce(1),
+                nonce: 1u128.into(),
             }
         }
 
@@ -3078,7 +3078,7 @@ pub mod tests {
                     definition_id: IdForTests::token_lp_definition_id(),
                     balance: BalanceForTests::lp_supply_init(),
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -3091,7 +3091,7 @@ pub mod tests {
                     total_supply: BalanceForTests::lp_supply_init(),
                     metadata_id: None,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -3111,7 +3111,7 @@ pub mod tests {
                     fees: 0u128,
                     active: true,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
 
@@ -3123,7 +3123,7 @@ pub mod tests {
                     definition_id: IdForTests::token_lp_definition_id(),
                     balance: 0,
                 }),
-                nonce: Nonce(0),
+                nonce: 0u128.into(),
             }
         }
     }
@@ -3210,7 +3210,7 @@ pub mod tests {
                 IdForTests::user_token_b_id(),
                 IdForTests::user_token_lp_id(),
             ],
-            vec![Nonce(0)],
+            vec![0u128.into()],
             instruction,
         )
         .unwrap();
@@ -3287,7 +3287,7 @@ pub mod tests {
                 IdForTests::user_token_b_id(),
                 IdForTests::user_token_lp_id(),
             ],
-            vec![Nonce(0), Nonce(0)],
+            vec![0u128.into(), 0u128.into()],
             instruction,
         )
         .unwrap();
@@ -3371,7 +3371,7 @@ pub mod tests {
                 IdForTests::user_token_b_id(),
                 IdForTests::user_token_lp_id(),
             ],
-            vec![Nonce(0), Nonce(0)],
+            vec![0u128.into(), 0u128.into()],
             instruction,
         )
         .unwrap();
@@ -3443,7 +3443,7 @@ pub mod tests {
                 IdForTests::user_token_b_id(),
                 IdForTests::user_token_lp_id(),
             ],
-            vec![Nonce(0), Nonce(0)],
+            vec![0u128.into(), 0u128.into()],
             instruction,
         )
         .unwrap();
@@ -3506,7 +3506,7 @@ pub mod tests {
                 IdForTests::user_token_b_id(),
                 IdForTests::user_token_lp_id(),
             ],
-            vec![Nonce(0), Nonce(0)],
+            vec![0u128.into(), 0u128.into()],
             instruction,
         )
         .unwrap();
@@ -3566,7 +3566,7 @@ pub mod tests {
                 IdForTests::user_token_a_id(),
                 IdForTests::user_token_b_id(),
             ],
-            vec![Nonce(0)],
+            vec![0u128.into()],
             instruction,
         )
         .unwrap();
@@ -3616,7 +3616,7 @@ pub mod tests {
                 IdForTests::user_token_a_id(),
                 IdForTests::user_token_b_id(),
             ],
-            vec![Nonce(0)],
+            vec![0u128.into()],
             instruction,
         )
         .unwrap();
@@ -3731,7 +3731,7 @@ pub mod tests {
             chain_caller.id(),
             vec![to, from], // The chain_caller program permutes the account order in the chain
             // call
-            vec![Nonce(0)],
+            vec![0u128.into()],
             instruction,
         )
         .unwrap();
@@ -4018,14 +4018,14 @@ pub mod tests {
         let expected_sender_post = {
             let mut this = state.get_account_by_id(sender_id);
             this.balance = sender_init_balance;
-            this.nonce = Nonce(0);
+            this.nonce = 0u128.into();
             this
         };
 
         let expected_recipient_post = {
             let mut this = state.get_account_by_id(sender_id);
             this.balance = recipient_init_balance;
-            this.nonce = Nonce(0);
+            this.nonce = 0u128.into();
             this
         };
 

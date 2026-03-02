@@ -11,18 +11,7 @@ use crate::{NullifierPublicKey, NullifierSecretKey, program::ProgramId};
 
 pub mod data;
 
-#[derive(
-    Copy,
-    Debug,
-    Default,
-    Clone,
-    Eq,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    BorshDeserialize,
-    BorshSerialize,
-)]
+#[derive(Copy, Debug, Default, Clone, Eq, PartialEq)]
 pub struct Nonce(pub u128);
 
 impl Nonce {
@@ -47,6 +36,48 @@ impl Nonce {
         let result = result.first_chunk::<16>().unwrap();
 
         Nonce(u128::from_le_bytes(*result))
+    }
+}
+
+impl From<u128> for Nonce {
+    fn from(value: u128) -> Self {
+        Self(value)
+    }
+}
+
+impl From<Nonce> for u128 {
+    fn from(value: Nonce) -> Self {
+        value.0
+    }
+}
+
+impl Serialize for Nonce {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        Serialize::serialize(&self.0, serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Nonce {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        Ok(<u128 as Deserialize>::deserialize(deserializer)?.into())
+    }
+}
+
+impl BorshSerialize for Nonce {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        BorshSerialize::serialize(&self.0, writer)
+    }
+}
+
+impl BorshDeserialize for Nonce {
+    fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        Ok(<u128 as BorshDeserialize>::deserialize_reader(reader)?.into())
     }
 }
 
@@ -251,5 +282,27 @@ mod tests {
             Nonce(37937661125547691021612781941709513486).private_account_nonce_increment(&nsk);
         let expected_nonce = Nonce(327300903218789900388409116014290259894);
         assert_eq!(nonce, expected_nonce);
+    }
+
+    #[test]
+    fn test_serde_roundtrip_for_nonce() {
+        let nonce: Nonce = 7u128.into();
+
+        let serde_serialized_nonce = serde_json::to_vec(&nonce).unwrap();
+
+        let nonce_restored = serde_json::from_slice(&serde_serialized_nonce).unwrap();
+
+        assert_eq!(nonce, nonce_restored);
+    }
+
+    #[test]
+    fn test_borsh_roundtrip_for_nonce() {
+        let nonce: Nonce = 7u128.into();
+
+        let borsh_serialized_nonce = borsh::to_vec(&nonce).unwrap();
+
+        let nonce_restored = borsh::from_slice(&borsh_serialized_nonce).unwrap();
+
+        assert_eq!(nonce, nonce_restored);
     }
 }

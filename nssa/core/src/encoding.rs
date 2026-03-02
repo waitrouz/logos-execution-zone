@@ -161,14 +161,13 @@ impl AccountId {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::account::Nonce;
 
     #[test]
     fn test_enconding() {
         let account = Account {
             program_owner: [1, 2, 3, 4, 5, 6, 7, 8],
             balance: 123456789012345678901234567890123456,
-            nonce: Nonce(42),
+            nonce: 42u128.into(),
             data: b"hola mundo".to_vec().try_into().unwrap(),
         };
 
@@ -226,12 +225,10 @@ mod tests {
     #[cfg(feature = "host")]
     #[test]
     fn test_account_to_bytes_roundtrip() {
-        use crate::account::Nonce;
-
         let account = Account {
             program_owner: [1, 2, 3, 4, 5, 6, 7, 8],
             balance: 123456789012345678901234567890123456,
-            nonce: Nonce(42),
+            nonce: 42u128.into(),
             data: b"hola mundo".to_vec().try_into().unwrap(),
         };
         let bytes = account.to_bytes();

@@ -328,7 +328,6 @@ impl WrappedBalanceSum {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::account::Nonce;
 
     #[test]
     fn test_post_state_new_with_claim_constructor() {
@@ -336,7 +335,7 @@ mod tests {
             program_owner: [1, 2, 3, 4, 5, 6, 7, 8],
             balance: 1337,
             data: vec![0xde, 0xad, 0xbe, 0xef].try_into().unwrap(),
-            nonce: Nonce(10),
+            nonce: 10u128.into(),
         };
 
         let account_post_state = AccountPostState::new_claimed(account.clone());
@@ -351,7 +350,7 @@ mod tests {
             program_owner: [1, 2, 3, 4, 5, 6, 7, 8],
             balance: 1337,
             data: vec![0xde, 0xad, 0xbe, 0xef].try_into().unwrap(),
-            nonce: Nonce(10),
+            nonce: 10u128.into(),
         };
 
         let account_post_state = AccountPostState::new(account.clone());
@@ -366,7 +365,7 @@ mod tests {
             program_owner: [1, 2, 3, 4, 5, 6, 7, 8],
             balance: 1337,
             data: vec![0xde, 0xad, 0xbe, 0xef].try_into().unwrap(),
-            nonce: Nonce(10),
+            nonce: 10u128.into(),
         };
 
         let mut account_post_state = AccountPostState::new(account.clone());
