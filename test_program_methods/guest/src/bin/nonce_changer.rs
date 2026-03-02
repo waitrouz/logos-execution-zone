@@ -11,7 +11,7 @@ fn main() {
     };
 
     let account_pre = &pre.account;
-    let account_post = account_pre.clone();
+    let mut account_post = account_pre.clone();
     account_post.nonce.public_account_nonce_increment();
 
     write_nssa_outputs(
