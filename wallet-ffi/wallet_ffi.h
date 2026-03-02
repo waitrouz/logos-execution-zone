@@ -345,6 +345,30 @@ enum WalletFfiError wallet_ffi_get_account_public(struct WalletHandle *handle,
                                                   struct FfiAccount *out_account);
 
 /**
+ * Get full private account data from the local storage.
+ *
+ * # Parameters
+ * - `handle`: Valid wallet handle
+ * - `account_id`: The account ID (32 bytes)
+ * - `out_account`: Output pointer for account data
+ *
+ * # Returns
+ * - `Success` on successful query
+ * - Error code on failure
+ *
+ * # Memory
+ * The account data must be freed with `wallet_ffi_free_account_data()`.
+ *
+ * # Safety
+ * - `handle` must be a valid wallet handle from `wallet_ffi_create_new` or `wallet_ffi_open`
+ * - `account_id` must be a valid pointer to a `FfiBytes32` struct
+ * - `out_account` must be a valid pointer to a `FfiAccount` struct
+ */
+enum WalletFfiError wallet_ffi_get_account_private(struct WalletHandle *handle,
+                                                   const struct FfiBytes32 *account_id,
+                                                   struct FfiAccount *out_account);
+
+/**
  * Free account data returned by `wallet_ffi_get_account_public`.
  *
  * # Safety
@@ -452,6 +476,112 @@ enum WalletFfiError wallet_ffi_account_id_from_base58(const char *base58_str,
                                                       struct FfiBytes32 *out_account_id);
 
 /**
+ * Claim a pinata reward using a public transaction.
+ *
+ * Sends a public claim transaction to the pinata program.
+ *
+ * # Parameters
+ * - `handle`: Valid wallet handle
+ * - `pinata_account_id`: The pinata program account ID
+ * - `winner_account_id`: The recipient account ID
+ * - `solution`: The solution value as little-endian [u8; 16]
+ * - `out_result`: Output pointer for the transaction result
+ *
+ * # Returns
+ * - `Success` if the claim transaction was submitted successfully
+ * - Error code on failure
+ *
+ * # Memory
+ * The result must be freed with `wallet_ffi_free_transfer_result()`.
+ *
+ * # Safety
+ * - `handle` must be a valid wallet handle from `wallet_ffi_create_new` or `wallet_ffi_open`
+ * - `pinata_account_id` must be a valid pointer to a `FfiBytes32` struct
+ * - `winner_account_id` must be a valid pointer to a `FfiBytes32` struct
+ * - `solution` must be a valid pointer to a `[u8; 16]` array
+ * - `out_result` must be a valid pointer to a `FfiTransferResult` struct
+ */
+enum WalletFfiError wallet_ffi_claim_pinata(struct WalletHandle *handle,
+                                            const struct FfiBytes32 *pinata_account_id,
+                                            const struct FfiBytes32 *winner_account_id,
+                                            const uint8_t (*solution)[16],
+                                            struct FfiTransferResult *out_result);
+
+/**
+ * Claim a pinata reward using a private transaction for an already-initialized owned account.
+ *
+ * Sends a privacy-preserving claim transaction for a winner account that already has
+ * an on-chain commitment (i.e. was previously initialized).
+ *
+ * # Parameters
+ * - `handle`: Valid wallet handle
+ * - `pinata_account_id`: The pinata program account ID
+ * - `winner_account_id`: The recipient private account ID (must be owned by this wallet)
+ * - `solution`: The solution value as little-endian [u8; 16]
+ * - `winner_proof_index`: Leaf index in the commitment tree for the membership proof
+ * - `winner_proof_siblings`: Pointer to an array of 32-byte sibling hashes
+ * - `winner_proof_siblings_len`: Number of sibling hashes in the array
+ * - `out_result`: Output pointer for the transaction result
+ *
+ * # Returns
+ * - `Success` if the claim transaction was submitted successfully
+ * - Error code on failure
+ *
+ * # Memory
+ * The result must be freed with `wallet_ffi_free_transfer_result()`.
+ *
+ * # Safety
+ * - `handle` must be a valid wallet handle from `wallet_ffi_create_new` or `wallet_ffi_open`
+ * - `pinata_account_id` must be a valid pointer to a `FfiBytes32` struct
+ * - `winner_account_id` must be a valid pointer to a `FfiBytes32` struct
+ * - `solution` must be a valid pointer to a `[u8; 16]` array
+ * - `winner_proof_siblings` must be a valid pointer to an array of `winner_proof_siblings_len`
+ *   elements of `[u8; 32]`, or null if `winner_proof_siblings_len` is 0
+ * - `out_result` must be a valid pointer to a `FfiTransferResult` struct
+ */
+enum WalletFfiError wallet_ffi_claim_pinata_private_owned_already_initialized(struct WalletHandle *handle,
+                                                                              const struct FfiBytes32 *pinata_account_id,
+                                                                              const struct FfiBytes32 *winner_account_id,
+                                                                              const uint8_t (*solution)[16],
+                                                                              uintptr_t winner_proof_index,
+                                                                              const uint8_t (*winner_proof_siblings)[32],
+                                                                              uintptr_t winner_proof_siblings_len,
+                                                                              struct FfiTransferResult *out_result);
+
+/**
+ * Claim a pinata reward using a private transaction for a not-yet-initialized owned account.
+ *
+ * Sends a privacy-preserving claim transaction for a winner account that has not yet
+ * been committed on-chain (i.e. is being initialized as part of this claim).
+ *
+ * # Parameters
+ * - `handle`: Valid wallet handle
+ * - `pinata_account_id`: The pinata program account ID
+ * - `winner_account_id`: The recipient private account ID (must be owned by this wallet)
+ * - `solution`: The solution value as little-endian [u8; 16]
+ * - `out_result`: Output pointer for the transaction result
+ *
+ * # Returns
+ * - `Success` if the claim transaction was submitted successfully
+ * - Error code on failure
+ *
+ * # Memory
+ * The result must be freed with `wallet_ffi_free_transfer_result()`.
+ *
+ * # Safety
+ * - `handle` must be a valid wallet handle from `wallet_ffi_create_new` or `wallet_ffi_open`
+ * - `pinata_account_id` must be a valid pointer to a `FfiBytes32` struct
+ * - `winner_account_id` must be a valid pointer to a `FfiBytes32` struct
+ * - `solution` must be a valid pointer to a `[u8; 16]` array
+ * - `out_result` must be a valid pointer to a `FfiTransferResult` struct
+ */
+enum WalletFfiError wallet_ffi_claim_pinata_private_owned_not_initialized(struct WalletHandle *handle,
+                                                                          const struct FfiBytes32 *pinata_account_id,
+                                                                          const struct FfiBytes32 *winner_account_id,
+                                                                          const uint8_t (*solution)[16],
+                                                                          struct FfiTransferResult *out_result);
+
+/**
  * Synchronize private accounts to a specific block.
  *
  * This scans the blockchain from the last synced block to the specified block,
@@ -547,6 +677,182 @@ enum WalletFfiError wallet_ffi_transfer_public(struct WalletHandle *handle,
                                                struct FfiTransferResult *out_result);
 
 /**
+ * Send a shielded token transfer.
+ *
+ * Transfers tokens from a public account to a private account.
+ *
+ * # Parameters
+ * - `handle`: Valid wallet handle
+ * - `from`: Source account ID (must be owned by this wallet)
+ * - `to_keys`: Destination account keys
+ * - `amount`: Amount to transfer as little-endian [u8; 16]
+ * - `out_result`: Output pointer for transfer result
+ *
+ * # Returns
+ * - `Success` if the transfer was submitted successfully
+ * - `InsufficientFunds` if the source account doesn't have enough balance
+ * - `KeyNotFound` if the source account's signing key is not in this wallet
+ * - Error code on other failures
+ *
+ * # Memory
+ * The result must be freed with `wallet_ffi_free_transfer_result()`.
+ *
+ * # Safety
+ * - `handle` must be a valid wallet handle from `wallet_ffi_create_new` or `wallet_ffi_open`
+ * - `from` must be a valid pointer to a `FfiBytes32` struct
+ * - `to_keys` must be a valid pointer to a `FfiPrivateAccountKeys` struct
+ * - `amount` must be a valid pointer to a `[u8; 16]` array
+ * - `out_result` must be a valid pointer to a `FfiTransferResult` struct
+ */
+enum WalletFfiError wallet_ffi_transfer_shielded(struct WalletHandle *handle,
+                                                 const struct FfiBytes32 *from,
+                                                 const struct FfiPrivateAccountKeys *to_keys,
+                                                 const uint8_t (*amount)[16],
+                                                 struct FfiTransferResult *out_result);
+
+/**
+ * Send a deshielded token transfer.
+ *
+ * Transfers tokens from a private account to a public account.
+ *
+ * # Parameters
+ * - `handle`: Valid wallet handle
+ * - `from`: Source account ID (must be owned by this wallet)
+ * - `to`: Destination account ID
+ * - `amount`: Amount to transfer as little-endian [u8; 16]
+ * - `out_result`: Output pointer for transfer result
+ *
+ * # Returns
+ * - `Success` if the transfer was submitted successfully
+ * - `InsufficientFunds` if the source account doesn't have enough balance
+ * - `KeyNotFound` if the source account's signing key is not in this wallet
+ * - Error code on other failures
+ *
+ * # Memory
+ * The result must be freed with `wallet_ffi_free_transfer_result()`.
+ *
+ * # Safety
+ * - `handle` must be a valid wallet handle from `wallet_ffi_create_new` or `wallet_ffi_open`
+ * - `from` must be a valid pointer to a `FfiBytes32` struct
+ * - `to` must be a valid pointer to a `FfiBytes32` struct
+ * - `amount` must be a valid pointer to a `[u8; 16]` array
+ * - `out_result` must be a valid pointer to a `FfiTransferResult` struct
+ */
+enum WalletFfiError wallet_ffi_transfer_deshielded(struct WalletHandle *handle,
+                                                   const struct FfiBytes32 *from,
+                                                   const struct FfiBytes32 *to,
+                                                   const uint8_t (*amount)[16],
+                                                   struct FfiTransferResult *out_result);
+
+/**
+ * Send a private token transfer.
+ *
+ * Transfers tokens from a private account to another private account.
+ *
+ * # Parameters
+ * - `handle`: Valid wallet handle
+ * - `from`: Source account ID (must be owned by this wallet)
+ * - `to_keys`: Destination account keys
+ * - `amount`: Amount to transfer as little-endian [u8; 16]
+ * - `out_result`: Output pointer for transfer result
+ *
+ * # Returns
+ * - `Success` if the transfer was submitted successfully
+ * - `InsufficientFunds` if the source account doesn't have enough balance
+ * - `KeyNotFound` if the source account's signing key is not in this wallet
+ * - Error code on other failures
+ *
+ * # Memory
+ * The result must be freed with `wallet_ffi_free_transfer_result()`.
+ *
+ * # Safety
+ * - `handle` must be a valid wallet handle from `wallet_ffi_create_new` or `wallet_ffi_open`
+ * - `from` must be a valid pointer to a `FfiBytes32` struct
+ * - `to_keys` must be a valid pointer to a `FfiPrivateAccountKeys` struct
+ * - `amount` must be a valid pointer to a `[u8; 16]` array
+ * - `out_result` must be a valid pointer to a `FfiTransferResult` struct
+ */
+enum WalletFfiError wallet_ffi_transfer_private(struct WalletHandle *handle,
+                                                const struct FfiBytes32 *from,
+                                                const struct FfiPrivateAccountKeys *to_keys,
+                                                const uint8_t (*amount)[16],
+                                                struct FfiTransferResult *out_result);
+
+/**
+ * Send a shielded token transfer to an owned private account.
+ *
+ * Transfers tokens from a public account to a private account that is owned
+ * by this wallet. Unlike `wallet_ffi_transfer_shielded` which sends to a
+ * foreign account using NPK/VPK keys, this variant takes a destination
+ * account ID that must belong to this wallet.
+ *
+ * # Parameters
+ * - `handle`: Valid wallet handle
+ * - `from`: Source public account ID (must be owned by this wallet)
+ * - `to`: Destination private account ID (must be owned by this wallet)
+ * - `amount`: Amount to transfer as little-endian [u8; 16]
+ * - `out_result`: Output pointer for transfer result
+ *
+ * # Returns
+ * - `Success` if the transfer was submitted successfully
+ * - `InsufficientFunds` if the source account doesn't have enough balance
+ * - `KeyNotFound` if either account's keys are not in this wallet
+ * - Error code on other failures
+ *
+ * # Memory
+ * The result must be freed with `wallet_ffi_free_transfer_result()`.
+ *
+ * # Safety
+ * - `handle` must be a valid wallet handle from `wallet_ffi_create_new` or `wallet_ffi_open`
+ * - `from` must be a valid pointer to a `FfiBytes32` struct
+ * - `to` must be a valid pointer to a `FfiBytes32` struct
+ * - `amount` must be a valid pointer to a `[u8; 16]` array
+ * - `out_result` must be a valid pointer to a `FfiTransferResult` struct
+ */
+enum WalletFfiError wallet_ffi_transfer_shielded_owned(struct WalletHandle *handle,
+                                                       const struct FfiBytes32 *from,
+                                                       const struct FfiBytes32 *to,
+                                                       const uint8_t (*amount)[16],
+                                                       struct FfiTransferResult *out_result);
+
+/**
+ * Send a private token transfer to an owned private account.
+ *
+ * Transfers tokens from a private account to another private account that is
+ * owned by this wallet. Unlike `wallet_ffi_transfer_private` which sends to a
+ * foreign account using NPK/VPK keys, this variant takes a destination
+ * account ID that must belong to this wallet.
+ *
+ * # Parameters
+ * - `handle`: Valid wallet handle
+ * - `from`: Source private account ID (must be owned by this wallet)
+ * - `to`: Destination private account ID (must be owned by this wallet)
+ * - `amount`: Amount to transfer as little-endian [u8; 16]
+ * - `out_result`: Output pointer for transfer result
+ *
+ * # Returns
+ * - `Success` if the transfer was submitted successfully
+ * - `InsufficientFunds` if the source account doesn't have enough balance
+ * - `KeyNotFound` if either account's keys are not in this wallet
+ * - Error code on other failures
+ *
+ * # Memory
+ * The result must be freed with `wallet_ffi_free_transfer_result()`.
+ *
+ * # Safety
+ * - `handle` must be a valid wallet handle from `wallet_ffi_create_new` or `wallet_ffi_open`
+ * - `from` must be a valid pointer to a `FfiBytes32` struct
+ * - `to` must be a valid pointer to a `FfiBytes32` struct
+ * - `amount` must be a valid pointer to a `[u8; 16]` array
+ * - `out_result` must be a valid pointer to a `FfiTransferResult` struct
+ */
+enum WalletFfiError wallet_ffi_transfer_private_owned(struct WalletHandle *handle,
+                                                      const struct FfiBytes32 *from,
+                                                      const struct FfiBytes32 *to,
+                                                      const uint8_t (*amount)[16],
+                                                      struct FfiTransferResult *out_result);
+
+/**
  * Register a public account on the network.
  *
  * This initializes a public account on the blockchain. The account must be
@@ -572,6 +878,33 @@ enum WalletFfiError wallet_ffi_transfer_public(struct WalletHandle *handle,
 enum WalletFfiError wallet_ffi_register_public_account(struct WalletHandle *handle,
                                                        const struct FfiBytes32 *account_id,
                                                        struct FfiTransferResult *out_result);
+
+/**
+ * Register a private account on the network.
+ *
+ * This initializes a private account. The account must be
+ * owned by this wallet.
+ *
+ * # Parameters
+ * - `handle`: Valid wallet handle
+ * - `account_id`: Account ID to register
+ * - `out_result`: Output pointer for registration result
+ *
+ * # Returns
+ * - `Success` if the registration was submitted successfully
+ * - Error code on failure
+ *
+ * # Memory
+ * The result must be freed with `wallet_ffi_free_transfer_result()`.
+ *
+ * # Safety
+ * - `handle` must be a valid wallet handle from `wallet_ffi_create_new` or `wallet_ffi_open`
+ * - `account_id` must be a valid pointer to a `FfiBytes32` struct
+ * - `out_result` must be a valid pointer to a `FfiTransferResult` struct
+ */
+enum WalletFfiError wallet_ffi_register_private_account(struct WalletHandle *handle,
+                                                        const struct FfiBytes32 *account_id,
+                                                        struct FfiTransferResult *out_result);
 
 /**
  * Free a transfer result returned by `wallet_ffi_transfer_public` or

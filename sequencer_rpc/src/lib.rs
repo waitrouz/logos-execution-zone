@@ -28,6 +28,7 @@ pub struct JsonHandler<
 > {
     sequencer_state: Arc<Mutex<SequencerCore<BC, IC>>>,
     mempool_handle: MemPoolHandle<NSSATransaction>,
+    max_block_size: usize,
 }
 
 fn respond<T: Serialize>(val: T) -> Result<Value, RpcErr> {
@@ -49,3 +50,9 @@ pub fn rpc_error_responce_inverter(err: RpcError) -> RpcError {
         data: content,
     }
 }
+
+#[cfg(feature = "standalone")]
+use sequencer_core::mock::{MockBlockSettlementClient, MockIndexerClient};
+
+#[cfg(feature = "standalone")]
+pub type JsonHandlerWithMockClients = JsonHandler<MockBlockSettlementClient, MockIndexerClient>;

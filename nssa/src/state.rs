@@ -16,7 +16,7 @@ use crate::{
 
 pub const MAX_NUMBER_CHAINED_CALLS: usize = 10;
 
-#[derive(BorshSerialize, BorshDeserialize)]
+#[derive(Clone, BorshSerialize, BorshDeserialize)]
 #[cfg_attr(test, derive(Debug, PartialEq, Eq))]
 pub(crate) struct CommitmentSet {
     merkle_tree: MerkleTree,
@@ -64,6 +64,7 @@ impl CommitmentSet {
 }
 
 #[cfg_attr(test, derive(Debug, PartialEq, Eq))]
+#[derive(Clone)]
 struct NullifierSet(BTreeSet<Nullifier>);
 
 impl NullifierSet {
@@ -104,7 +105,7 @@ impl BorshDeserialize for NullifierSet {
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize)]
+#[derive(Clone, BorshSerialize, BorshDeserialize)]
 #[cfg_attr(test, derive(Debug, PartialEq, Eq))]
 pub struct V02State {
     public_state: HashMap<AccountId, Account>,
@@ -1322,7 +1323,8 @@ pub mod tests {
             AccountId::new([0; 32]),
         );
 
-        let large_data: Vec<u8> = vec![0; nssa_core::account::data::DATA_MAX_LENGTH_IN_BYTES + 1];
+        let large_data: Vec<u8> =
+            vec![0; nssa_core::account::data::DATA_MAX_LENGTH.as_u64() as usize + 1];
 
         let result = execute_and_prove(
             vec![public_account],
@@ -2474,6 +2476,12 @@ pub mod tests {
         fn user_token_b_holding_new_definition() -> u128 {
             7_500
         }
+
+        fn lp_supply_init() -> u128 {
+            // isqrt(vault_a_balance_init * vault_b_balance_init) = isqrt(5_000 * 2_500) = 3535
+            (BalanceForTests::vault_a_balance_init() * BalanceForTests::vault_b_balance_init())
+                .isqrt()
+        }
     }
 
     struct IdForTests;
@@ -3068,7 +3076,7 @@ pub mod tests {
                 balance: 0u128,
                 data: Data::from(&TokenHolding::Fungible {
                     definition_id: IdForTests::token_lp_definition_id(),
-                    balance: BalanceForTests::user_token_a_holding_new_definition(),
+                    balance: BalanceForTests::lp_supply_init(),
                 }),
                 nonce: Nonce(0),
             }
@@ -3080,7 +3088,7 @@ pub mod tests {
                 balance: 0u128,
                 data: Data::from(&TokenDefinition::Fungible {
                     name: String::from("LP Token"),
-                    total_supply: BalanceForTests::vault_a_balance_init(),
+                    total_supply: BalanceForTests::lp_supply_init(),
                     metadata_id: None,
                 }),
                 nonce: Nonce(0),
@@ -3097,7 +3105,7 @@ pub mod tests {
                     vault_a_id: IdForTests::vault_a_id(),
                     vault_b_id: IdForTests::vault_b_id(),
                     liquidity_pool_id: IdForTests::token_lp_definition_id(),
-                    liquidity_pool_supply: BalanceForTests::user_token_a_holding_new_definition(),
+                    liquidity_pool_supply: BalanceForTests::lp_supply_init(),
                     reserve_a: BalanceForTests::vault_a_balance_init(),
                     reserve_b: BalanceForTests::vault_b_balance_init(),
                     fees: 0u128,
@@ -3387,7 +3395,7 @@ pub mod tests {
         let user_token_b_post = state.get_account_by_id(IdForTests::user_token_b_id());
         let user_token_lp_post = state.get_account_by_id(IdForTests::user_token_lp_id());
 
-        let expected_pool = AccountForTests::pool_definition_init();
+        let expected_pool = AccountForTests::pool_definition_new_init();
         let expected_vault_a = AccountForTests::vault_a_init();
         let expected_vault_b = AccountForTests::vault_b_init();
         let expected_token_lp = AccountForTests::token_lp_definition_new_init();

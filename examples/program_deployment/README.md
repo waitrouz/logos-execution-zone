@@ -3,7 +3,7 @@
 This guide walks you through running the sequencer, compiling example programs, deploying a Hello World program, and interacting with accounts.
 
 You'll find:
-- Programs: example NSSA programs under `methods/guest/src/bin`.
+- Programs: example LEZ programs under `methods/guest/src/bin`.
 - Runners: scripts to create and submit transactions to invoke these programs publicly and privately under `src/bin`.
 
 # 0. Install the wallet
@@ -13,16 +13,7 @@ cargo install --path wallet --force
 ```
 
 # 1. Run the sequencer
-From the project’s root directory, start the sequencer:
-```bash
-cd sequencer_runner
-RUST_LOG=info cargo run $(pwd)/configs/debug
-```
-Keep this terminal open. We’ll use it only to observe the node logs.
-
-> [!NOTE]
-> If you have already ran this before you'll see a `rocksdb` directory with stored blocks. Be sure to remove that directory to follow this tutorial.
-
+From the project’s root directory, start the sequencer by following [these instructions](https://github.com/logos-blockchain/lssa#run-the-sequencer-and-node).
 
 ## Checking and setting up the wallet
 For sanity let's check that the wallet can connect to it.
@@ -92,6 +83,9 @@ You'll see an output similar to:
 Generated new account with account_id Public/BzdBoL4JRa5M873cuWb9rbYgASr1pXyaAZ1YW9ertWH9 at path /0
 ```
 The relevant part is the account id `BzdBoL4JRa5M873cuWb9rbYgASr1pXyaAZ1YW9ertWH9`
+
+> [!NOTE]
+> You can optionally assign a label to the account for easier identification using the `--label` option: `wallet account new public --label "my-account"`. Labels must be unique across all accounts.
 
 ## Check the account state
 New accounts are always Uninitialized. Verify:
@@ -268,6 +262,9 @@ You'll see an output similar to:
 Generated new account with account_id Private/7EDHyxejuynBpmbLuiEym9HMUyCYxZDuF8X3B89ADeMr at path /0
 ```
 The relevant part for this tutorial is the account id `7EDHyxejuynBpmbLuiEym9HMUyCYxZDuF8X3B89ADeMr`
+
+> [!NOTE]
+> As with public accounts, you can use the `--label` option to assign a label: `wallet account new private --label "my-private-account"`.
 
 You can check it's uninitialized with 
 
