@@ -28,19 +28,25 @@ pub struct Ciphertext(pub(crate) Vec<u8>);
 #[cfg(any(feature = "host", test))]
 impl std::fmt::Debug for Ciphertext {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let hex: String = self.0.iter().map(|b| format!("{b:02x}")).collect();
+        use std::fmt::Write as _;
+
+        let hex: String = self.0.iter().fold(String::new(), |mut acc, b| {
+            write!(acc, "{b:02x}").expect("writing to string should not fail");
+            acc
+        });
         write!(f, "Ciphertext({hex})")
     }
 }
 
 impl EncryptionScheme {
+    #[must_use]
     pub fn encrypt(
         account: &Account,
         shared_secret: &SharedSecretKey,
         commitment: &Commitment,
         output_index: u32,
     ) -> Ciphertext {
-        let mut buffer = account.to_bytes().to_vec();
+        let mut buffer = account.to_bytes().clone();
         Self::symmetric_transform(&mut buffer, shared_secret, commitment, output_index);
         Ciphertext(buffer)
     }
@@ -72,6 +78,7 @@ impl EncryptionScheme {
     }
 
     #[cfg(feature = "host")]
+    #[must_use]
     pub fn decrypt(
         ciphertext: &Ciphertext,
         shared_secret: &SharedSecretKey,
@@ -79,7 +86,7 @@ impl EncryptionScheme {
         output_index: u32,
     ) -> Option<Account> {
         use std::io::Cursor;
-        let mut buffer = ciphertext.0.to_owned();
+        let mut buffer = ciphertext.0.clone();
         Self::symmetric_transform(&mut buffer, shared_secret, commitment, output_index);
 
         let mut cursor = Cursor::new(buffer.as_slice());
@@ -87,12 +94,12 @@ impl EncryptionScheme {
             .inspect_err(|err| {
                 println!(
                     "Failed to decode {ciphertext:?} \n
-                      with secret {:?} ,\n 
+                      with secret {:?} ,\n
                       commitment {commitment:?} ,\n
                       and output_index {output_index} ,\n
                       with error {err:?}",
                     shared_secret.0
-                )
+                );
             })
             .ok()
     }

@@ -21,9 +21,8 @@ fn main() {
         instruction_words,
     ) = read_nssa_inputs::<Instruction>();
 
-    let [sender, receiver] = match pre_states.try_into() {
-        Ok(array) => array,
-        Err(_) => return,
+    let Ok([sender, receiver]) = <[_; 2]>::try_from(pre_states) else {
+        return;
     };
 
     // Maliciously set is_authorized to true for the first account

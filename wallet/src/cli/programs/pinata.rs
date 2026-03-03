@@ -69,10 +69,10 @@ pub enum PinataProgramSubcommandPublic {
     // TODO: Testnet only. Refactor to prevent compilation on mainnet.
     // Claim piñata prize
     Claim {
-        /// pinata_account_id - valid 32 byte hex string
+        /// `pinata_account_id` - valid 32 byte hex string
         #[arg(long)]
         pinata_account_id: String,
-        /// winner_account_id - valid 32 byte hex string
+        /// `winner_account_id` - valid 32 byte hex string
         #[arg(long)]
         winner_account_id: String,
     },
@@ -84,10 +84,10 @@ pub enum PinataProgramSubcommandPrivate {
     // TODO: Testnet only. Refactor to prevent compilation on mainnet.
     // Claim piñata prize
     ClaimPrivateOwned {
-        /// pinata_account_id - valid 32 byte hex string
+        /// `pinata_account_id` - valid 32 byte hex string
         #[arg(long)]
         pinata_account_id: String,
-        /// winner_account_id - valid 32 byte hex string
+        /// `winner_account_id` - valid 32 byte hex string
         #[arg(long)]
         winner_account_id: String,
     },
@@ -163,7 +163,7 @@ impl WalletSubcommand for PinataProgramSubcommandPrivate {
                     let acc_decode_data = vec![Decode(secret_winner, winner_account_id)];
 
                     wallet_core.decode_insert_privacy_preserving_transaction_results(
-                        tx,
+                        &tx,
                         &acc_decode_data,
                     )?;
                 }

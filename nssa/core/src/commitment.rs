@@ -14,7 +14,12 @@ pub struct Commitment(pub(super) [u8; 32]);
 #[cfg(any(feature = "host", test))]
 impl std::fmt::Debug for Commitment {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let hex: String = self.0.iter().map(|b| format!("{b:02x}")).collect();
+        use std::fmt::Write as _;
+
+        let hex: String = self.0.iter().fold(String::new(), |mut acc, b| {
+            write!(acc, "{b:02x}").expect("writing to string should not fail");
+            acc
+        });
         write!(f, "Commitment({hex})")
     }
 }
@@ -45,7 +50,8 @@ pub const DUMMY_COMMITMENT_HASH: [u8; 32] = [
 
 impl Commitment {
     /// Generates the commitment to a private account owned by user for npk:
-    /// SHA256(npk || program_owner || balance || nonce || SHA256(data))
+    /// SHA256(npk || `program_owner` || balance || nonce || SHA256(data))
+    #[must_use]
     pub fn new(npk: &NullifierPublicKey, account: &Account) -> Self {
         let mut bytes = Vec::new();
         bytes.extend_from_slice(&npk.to_byte_array());
@@ -73,6 +79,7 @@ pub type CommitmentSetDigest = [u8; 32];
 pub type MembershipProof = (usize, Vec<[u8; 32]>);
 
 /// Computes the resulting digest for the given membership proof and corresponding commitment
+#[must_use]
 pub fn compute_digest_for_path(
     commitment: &Commitment,
     proof: &MembershipProof,

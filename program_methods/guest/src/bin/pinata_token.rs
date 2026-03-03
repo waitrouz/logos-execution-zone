@@ -59,13 +59,15 @@ fn main() {
         instruction_words,
     ) = read_nssa_inputs::<Instruction>();
 
-    let [
-        pinata_definition,
-        pinata_token_holding,
-        winner_token_holding,
-    ] = match pre_states.try_into() {
-        Ok(array) => array,
-        Err(_) => return,
+    let Ok(
+        [
+            pinata_definition,
+            pinata_token_holding,
+            winner_token_holding,
+        ],
+    ) = <[_; 3]>::try_from(pre_states)
+    else {
+        return;
     };
 
     let data = Challenge::new(&pinata_definition.account.data);

@@ -1,4 +1,7 @@
-use std::{fmt::Display, str::FromStr};
+use std::{
+    fmt::{Display, Write as _},
+    str::FromStr,
+};
 
 use base58::{FromBase58, ToBase58};
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -25,12 +28,14 @@ pub struct Account {
 
 impl std::fmt::Debug for Account {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let program_owner_hex: String = self
+        let program_owner_hex = self
             .program_owner
             .iter()
             .flat_map(|n| n.to_le_bytes())
-            .map(|b| format!("{b:02x}"))
-            .collect();
+            .fold(String::new(), |mut acc, bytes| {
+                write!(acc, "{bytes:02x}").expect("writing to string should not fail");
+                acc
+            });
         f.debug_struct("Account")
             .field("program_owner", &program_owner_hex)
             .field("balance", &self.balance)
@@ -82,14 +87,17 @@ impl std::fmt::Debug for AccountId {
 }
 
 impl AccountId {
+    #[must_use]
     pub fn new(value: [u8; 32]) -> Self {
         Self { value }
     }
 
+    #[must_use]
     pub fn value(&self) -> &[u8; 32] {
         &self.value
     }
 
+    #[must_use]
     pub fn into_value(self) -> [u8; 32] {
         self.value
     }
@@ -172,7 +180,7 @@ mod tests {
                 .to_vec()
                 .try_into()
                 .unwrap(),
-            nonce: 0xdeadbeef,
+            nonce: 0xdead_beef,
         };
         let fingerprint = AccountId::new([8; 32]);
         let new_acc_with_metadata = AccountWithMetadata::new(account.clone(), true, fingerprint);

@@ -11,9 +11,8 @@ fn main() {
         instruction_words,
     ) = read_nssa_inputs::<Instruction>();
 
-    let [sender_pre, receiver_pre] = match pre_states.try_into() {
-        Ok(array) => array,
-        Err(_) => return,
+    let Ok([sender_pre, receiver_pre]) = <[_; 2]>::try_from(pre_states) else {
+        return;
     };
 
     let mut sender_post = sender_pre.account.clone();
