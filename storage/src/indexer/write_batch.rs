@@ -308,57 +308,14 @@ impl RocksDBIO {
             self.put_account_transactions_dependant(acc_id, tx_hashes, &mut write_batch)?;
         }
 
-        if block.header.block_id.is_multiple_of(BREAKPOINT_INTERVAL) {
-            self.put_next_breakpoint_batch(&mut write_batch)?;
-        }
-
         self.db.write(write_batch).map_err(|rerr| {
             DbError::rocksdb_cast_message(rerr, Some("Failed to write batch".to_string()))
-        })
-    }
+        })?;
 
-    // State
-
-    pub fn put_breakpoint_batch(
-        &self,
-        br_id: u64,
-        breakpoint: V02State,
-        write_batch: &mut WriteBatch,
-    ) -> DbResult<()> {
-        let cf_br = self.breakpoint_column();
-
-        write_batch.put_cf(
-            &cf_br,
-            borsh::to_vec(&br_id).map_err(|err| {
-                DbError::borsh_cast_message(
-                    err,
-                    Some("Failed to serialize breakpoint id".to_string()),
-                )
-            })?,
-            borsh::to_vec(&breakpoint).map_err(|err| {
-                DbError::borsh_cast_message(
-                    err,
-                    Some("Failed to serialize breakpoint data".to_string()),
-                )
-            })?,
-        );
-        Ok(())
-    }
-
-    pub fn put_next_breakpoint_batch(&self, write_batch: &mut WriteBatch) -> DbResult<()> {
-        let last_block = self.get_meta_last_block_in_db()?;
-        let next_breakpoint_id = self.get_meta_last_breakpoint_id()? + 1;
-        let block_to_break_id = next_breakpoint_id * BREAKPOINT_INTERVAL;
-
-        if block_to_break_id <= last_block {
-            let next_breakpoint = self.calculate_state_for_id(block_to_break_id)?;
-
-            self.put_breakpoint_batch(next_breakpoint_id, next_breakpoint, write_batch)?;
-            self.put_meta_last_breakpoint_id_batch(next_breakpoint_id, write_batch)
-        } else {
-            Err(DbError::db_interaction_error(
-                "Breakpoint not yet achieved".to_string(),
-            ))
+        if block.header.block_id.is_multiple_of(BREAKPOINT_INTERVAL) {
+            self.put_next_breakpoint()?;
         }
+
+        Ok(())
     }
 }
