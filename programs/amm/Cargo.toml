@@ -12,4 +12,3 @@ amm_core.workspace = true
 
 [features]
 with-nssa = ["nssa"]
-test-utils = []
