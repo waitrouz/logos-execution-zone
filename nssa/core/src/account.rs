@@ -19,7 +19,7 @@ impl Nonce {
         self.0 += 1;
     }
 
-    pub fn private_account_nonce_init(self, npk: &NullifierPublicKey) -> Nonce {
+    pub fn private_account_nonce_init(npk: &NullifierPublicKey) -> Nonce {
         let mut bytes: [u8; 64] = [0u8; 64];
         bytes[..32].copy_from_slice(&npk.0);
         let result: [u8; 32] = Impl::hash_bytes(&bytes).as_bytes().try_into().unwrap();
@@ -292,7 +292,7 @@ mod tests {
     #[test]
     fn initialize_private_nonce() {
         let npk = NullifierPublicKey([42; 32]);
-        let nonce = Nonce::default().private_account_nonce_init(&npk);
+        let nonce = Nonce::private_account_nonce_init(&npk);
         let expected_nonce = Nonce(37937661125547691021612781941709513486);
         assert_eq!(nonce, expected_nonce);
     }

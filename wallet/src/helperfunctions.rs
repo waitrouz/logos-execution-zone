@@ -157,8 +157,8 @@ impl From<Account> for HumanReadableAccount {
         let data = hex::encode(account.data);
         Self {
             balance: account.balance,
-            program_owner_b64,
-            data_b64,
+            program_owner,
+            data,
             nonce: account.nonce.0,
         }
     }
