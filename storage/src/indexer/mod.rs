@@ -135,31 +135,45 @@ impl RocksDBIO {
     // Columns
 
     pub fn meta_column(&self) -> Arc<BoundColumnFamily<'_>> {
-        self.db.cf_handle(CF_META_NAME).expect("Meta column should exist")
+        self.db
+            .cf_handle(CF_META_NAME)
+            .expect("Meta column should exist")
     }
 
     pub fn block_column(&self) -> Arc<BoundColumnFamily<'_>> {
-        self.db.cf_handle(CF_BLOCK_NAME).expect("Block column should exist")
+        self.db
+            .cf_handle(CF_BLOCK_NAME)
+            .expect("Block column should exist")
     }
 
     pub fn breakpoint_column(&self) -> Arc<BoundColumnFamily<'_>> {
-        self.db.cf_handle(CF_BREAKPOINT_NAME).expect("Breakpoint column should exist")
+        self.db
+            .cf_handle(CF_BREAKPOINT_NAME)
+            .expect("Breakpoint column should exist")
     }
 
     pub fn hash_to_id_column(&self) -> Arc<BoundColumnFamily<'_>> {
-        self.db.cf_handle(CF_HASH_TO_ID).expect("Hash to id map column should exist")
+        self.db
+            .cf_handle(CF_HASH_TO_ID)
+            .expect("Hash to id map column should exist")
     }
 
     pub fn tx_hash_to_id_column(&self) -> Arc<BoundColumnFamily<'_>> {
-        self.db.cf_handle(CF_TX_TO_ID).expect("Tx hash to id map column should exist")
+        self.db
+            .cf_handle(CF_TX_TO_ID)
+            .expect("Tx hash to id map column should exist")
     }
 
     pub fn account_id_to_tx_hash_column(&self) -> Arc<BoundColumnFamily<'_>> {
-        self.db.cf_handle(CF_ACC_TO_TX).expect("Account id to tx map column should exist")
+        self.db
+            .cf_handle(CF_ACC_TO_TX)
+            .expect("Account id to tx map column should exist")
     }
 
     pub fn account_meta_column(&self) -> Arc<BoundColumnFamily<'_>> {
-        self.db.cf_handle(CF_ACC_META).expect("Account meta column should exist")
+        self.db
+            .cf_handle(CF_ACC_META)
+            .expect("Account meta column should exist")
     }
 
     // State
