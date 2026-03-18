@@ -315,8 +315,8 @@ mod tests {
     #[test]
     fn increment_private_nonce() {
         let nsk: NullifierSecretKey = [42_u8; 32];
-        let nonce =
-            Nonce(37_937_661_125_547_691_021_612_781_941_709_513_486).private_account_nonce_increment(&nsk);
+        let nonce = Nonce(37_937_661_125_547_691_021_612_781_941_709_513_486)
+            .private_account_nonce_increment(&nsk);
         let expected_nonce = Nonce(327_300_903_218_789_900_388_409_116_014_290_259_894);
         assert_eq!(nonce, expected_nonce);
     }

@@ -275,10 +275,7 @@ fn compute_circuit_output(
                         nsk,
                     );
 
-                    let new_nonce = pre_state
-                        .account
-                        .nonce
-                        .private_account_nonce_increment(nsk);
+                    let new_nonce = pre_state.account.nonce.private_account_nonce_increment(nsk);
 
                     (new_nullifier, new_nonce)
                 } else {
