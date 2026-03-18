@@ -408,7 +408,7 @@ pub mod tests {
     fn nonces_must_match_the_state_current_nonces() {
         let (key1, key2, addr1, addr2) = keys_for_tests();
         let state = state_for_tests();
-        let nonces = vec![0_u128.into(), 1u128.into()];
+        let nonces = vec![0_u128.into(), 1_u128.into()];
         let instruction = 1337;
         let message = Message::try_new(
             Program::authenticated_transfer_program().id(),

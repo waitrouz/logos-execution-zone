@@ -140,7 +140,7 @@ pub mod tests {
 
         let public_account_ids = vec![AccountId::new([1; 32])];
 
-        let nonces = vec![1u128.into(), 2u128.into(), 3u128.into()];
+        let nonces = vec![1_u128.into(), 2_u128.into(), 3_u128.into()];
 
         let public_post_states = vec![Account::default()];
 
