@@ -69,13 +69,13 @@ impl BedrockClient {
                 .post_transaction(self.node_url.clone(), tx.clone())
                 .await
             {
-                Ok(_) => Ok(Ok(())),
+                Ok(()) => Ok(Ok(())),
                 Err(err) => match err {
                     // Retry arm.
                     // Retrying only reqwest errors: mainly connected to http.
                     Error::Request(_) => Err(err),
                     // Returning non-retryable error
-                    _ => Ok(Err(err)),
+                    Error::Server(_) | Error::Client(_) | Error::Url(_) => Ok(Err(err)),
                 },
             }
         })
