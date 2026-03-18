@@ -1,7 +1,13 @@
+#![expect(
+    clippy::shadow_unrelated,
+    clippy::tests_outside_test_module,
+    reason = "We don't care about these in tests"
+)]
+
 use std::time::Duration;
 
-use anyhow::{Context, Result};
-use indexer_service_rpc::RpcClient;
+use anyhow::{Context as _, Result};
+use indexer_service_rpc::RpcClient as _;
 use integration_tests::{
     TIME_TO_WAIT_FOR_BLOCK_SECONDS, TestContext, format_private_account_id,
     format_public_account_id, verify_commitment_is_in_state,
@@ -11,8 +17,8 @@ use nssa::AccountId;
 use tokio::test;
 use wallet::cli::{Command, programs::native_token_transfer::AuthTransferSubcommand};
 
-/// Timeout in milliseconds to reliably await for block finalization
-const L2_TO_L1_TIMEOUT_MILLIS: u64 = 600000;
+/// Timeout in milliseconds to reliably await for block finalization.
+const L2_TO_L1_TIMEOUT_MILLIS: u64 = 600_000;
 
 #[test]
 async fn indexer_test_run() -> Result<()> {
@@ -61,8 +67,11 @@ async fn indexer_block_batching() -> Result<()> {
 
     assert!(last_block_indexer > 1);
 
-    // Getting wide batch to fit all blocks
-    let block_batch = ctx.indexer_client().get_blocks(1, 100).await.unwrap();
+    // Getting wide batch to fit all blocks (from latest backwards)
+    let mut block_batch = ctx.indexer_client().get_blocks(None, 100).await.unwrap();
+
+    // Reverse to check chain consistency from oldest to newest
+    block_batch.reverse();
 
     // Checking chain consistency
     let mut prev_block_hash = block_batch.first().unwrap().header.hash;
