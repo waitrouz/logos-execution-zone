@@ -26,7 +26,7 @@ impl Account {
         }
         bytes.extend_from_slice(&self.balance.to_le_bytes());
         bytes.extend_from_slice(&self.nonce.0.to_le_bytes());
-        let data_length: u32 = self.data.len() as u32;
+        let data_length: u32 = u32::try_from(self.data.len()).expect("Invalid u32");
         bytes.extend_from_slice(&data_length.to_le_bytes());
         bytes.extend_from_slice(self.data.as_ref());
         bytes

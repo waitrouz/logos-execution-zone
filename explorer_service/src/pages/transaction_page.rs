@@ -126,7 +126,7 @@ pub fn TransactionPage() -> impl IntoView {
                                                                     <span class="hash">{account_id_str}</span>
                                                                 </A>
                                                                 <span class="nonce">
-                                                                    " (nonce: " {nonce.0.to_string()} ")"
+                                                                    " (nonce: " {nonce.to_string()} ")"
                                                                 </span>
                                                             </div>
                                                         }
@@ -229,7 +229,7 @@ pub fn TransactionPage() -> impl IntoView {
                                                                     <span class="hash">{account_id_str}</span>
                                                                 </A>
                                                                 <span class="nonce">
-                                                                    " (nonce: " {nonce.0.to_string()} ")"
+                                                                    " (nonce: " {nonce.to_string()} ")"
                                                                 </span>
                                                             </div>
                                                         }

@@ -6,7 +6,7 @@ use std::{
 use base58::{FromBase58 as _, ToBase58 as _};
 use borsh::{BorshDeserialize, BorshSerialize};
 pub use data::Data;
-use risc0_zkvm::sha::{Impl, Sha256};
+use risc0_zkvm::sha::{Impl, Sha256 as _};
 use serde::{Deserialize, Serialize};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
@@ -18,27 +18,32 @@ pub mod data;
 pub struct Nonce(pub u128);
 
 impl Nonce {
-    pub fn public_account_nonce_increment(&mut self) {
-        self.0 += 1;
+    pub const fn public_account_nonce_increment(&mut self) {
+        self.0 = self
+            .0
+            .checked_add(1)
+            .expect("Overflow when incrementing nonce");
     }
 
-    pub fn private_account_nonce_init(npk: &NullifierPublicKey) -> Nonce {
-        let mut bytes: [u8; 64] = [0u8; 64];
+    #[must_use]
+    pub fn private_account_nonce_init(npk: &NullifierPublicKey) -> Self {
+        let mut bytes: [u8; 64] = [0_u8; 64];
         bytes[..32].copy_from_slice(&npk.0);
         let result: [u8; 32] = Impl::hash_bytes(&bytes).as_bytes().try_into().unwrap();
         let result = result.first_chunk::<16>().unwrap();
 
-        Nonce(u128::from_le_bytes(*result))
+        Self(u128::from_le_bytes(*result))
     }
 
-    pub fn private_account_nonce_increment(self, nsk: &NullifierSecretKey) -> Nonce {
-        let mut bytes: [u8; 64] = [0u8; 64];
+    #[must_use]
+    pub fn private_account_nonce_increment(self, nsk: &NullifierSecretKey) -> Self {
+        let mut bytes: [u8; 64] = [0_u8; 64];
         bytes[..32].copy_from_slice(nsk);
         bytes[32..48].copy_from_slice(&self.0.to_le_bytes());
         let result: [u8; 32] = Impl::hash_bytes(&bytes).as_bytes().try_into().unwrap();
         let result = result.first_chunk::<16>().unwrap();
 
-        Nonce(u128::from_le_bytes(*result))
+        Self(u128::from_le_bytes(*result))
     }
 }
 
