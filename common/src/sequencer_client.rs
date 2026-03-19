@@ -55,7 +55,7 @@ impl SequencerClient {
         Ok(Self {
             client: Client::builder()
                 // Add more fields if needed
-                .timeout(std::time::Duration::from_secs(60))
+                .timeout(std::time::Duration::from_mins(1))
                 // Should be kept in sync with server keep-alive settings
                 .pool_idle_timeout(std::time::Duration::from_secs(5))
                 .build()?,

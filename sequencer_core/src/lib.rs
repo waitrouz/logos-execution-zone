@@ -336,7 +336,7 @@ impl<BC: BlockSettlementClientTrait, IC: IndexerClientTrait> SequencerCore<BC, I
     fn next_block_id(&self) -> u64 {
         self.chain_height
             .checked_add(1)
-            .expect(&format!("Max block height reached: {}", self.chain_height))
+            .unwrap_or_else(|| panic!("Max block height reached: {}", self.chain_height))
     }
 }
 
@@ -412,7 +412,7 @@ mod tests {
                 node_url: "http://not-used-in-unit-tests".parse().unwrap(),
                 auth: None,
             },
-            retry_pending_blocks_timeout: Duration::from_secs(60 * 4),
+            retry_pending_blocks_timeout: Duration::from_mins(4),
             indexer_rpc_url: "ws://localhost:8779".parse().unwrap(),
         }
     }

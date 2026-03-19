@@ -400,7 +400,7 @@ mod tests {
             initial_accounts,
             initial_commitments: vec![],
             signing_key: *sequencer_sign_key_for_testing().value(),
-            retry_pending_blocks_timeout: Duration::from_secs(60 * 4),
+            retry_pending_blocks_timeout: Duration::from_mins(4),
             bedrock_config: BedrockConfig {
                 backoff: BackoffConfig {
                     start_delay: Duration::from_millis(100),

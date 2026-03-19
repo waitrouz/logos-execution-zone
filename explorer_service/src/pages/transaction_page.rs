@@ -177,11 +177,18 @@ pub fn TransactionPage() -> impl IntoView {
                                         encrypted_private_post_states,
                                         new_commitments,
                                         new_nullifiers,
+                                        validity_window
                                     } = message;
                                     let WitnessSet {
                                         signatures_and_public_keys: _,
                                         proof,
                                     } = witness_set;
+                                    let validity_window_formatted = match validity_window.0 {
+                                        (Some(start), Some(end)) => format!("from {start} to {end}"),
+                                        (Some(start), None) => format!("from {start}"),
+                                        (None, Some(end)) => format!("until {end}"),
+                                        (None, None) => "unbounded".to_owned(),
+                                    };
 
                                     let proof_len = proof.0.len();
                                     view! {
@@ -211,6 +218,10 @@ pub fn TransactionPage() -> impl IntoView {
                                                 <div class="info-row">
                                                     <span class="info-label">"Proof Size:"</span>
                                                     <span class="info-value">{format!("{proof_len} bytes")}</span>
+                                                </div>
+                                                <div class="info-row">
+                                                    <span class="info-label">"Validity Window:"</span>
+                                                    <span class="info-value">{validity_window_formatted}</span>
                                                 </div>
                                             </div>
 

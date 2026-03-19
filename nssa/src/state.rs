@@ -3044,7 +3044,7 @@ pub mod tests {
         if is_inside_validity_window {
             assert!(result.is_ok());
         } else {
-            assert!(matches!(result, Err(NssaError::OutOfValidityWindow)))
+            assert!(matches!(result, Err(NssaError::OutOfValidityWindow)));
         }
     }
 
@@ -3106,7 +3106,7 @@ pub mod tests {
         if is_inside_validity_window {
             assert!(result.is_ok());
         } else {
-            assert!(matches!(result, Err(NssaError::OutOfValidityWindow)))
+            assert!(matches!(result, Err(NssaError::OutOfValidityWindow)));
         }
     }
 
