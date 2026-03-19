@@ -161,8 +161,11 @@ pub struct ProgramOutput {
     pub instruction_data: InstructionData,
     /// The account pre states the program received to produce this output.
     pub pre_states: Vec<AccountWithMetadata>,
+    /// The account post states the program execution produced.
     pub post_states: Vec<AccountPostState>,
+    /// The list of chained calls to other programs.
     pub chained_calls: Vec<ChainedCall>,
+    /// The window where the program output is valid.
     pub validity_window: ValidityWindow,
 }
 
