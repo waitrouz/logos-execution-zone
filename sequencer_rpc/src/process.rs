@@ -385,8 +385,8 @@ mod tests {
                 }),
             },
             indexer_rpc_url: "ws://localhost:8779".parse().unwrap(),
-            initial_accounts: None,
-            initial_commitments: None,
+            initial_public_accounts: None,
+            initial_private_accounts: None,
         }
     }
 

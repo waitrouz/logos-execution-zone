@@ -103,7 +103,7 @@ impl<BC: BlockSettlementClientTrait, IC: IndexerClientTrait> SequencerCore<BC, I
             );
 
             let initial_commitments: Option<Vec<nssa_core::Commitment>> = config
-                .initial_commitments
+                .initial_private_accounts
                 .clone()
                 .map(|initial_commitments| {
                     initial_commitments
@@ -121,8 +121,10 @@ impl<BC: BlockSettlementClientTrait, IC: IndexerClientTrait> SequencerCore<BC, I
                         .collect()
                 });
 
-            let init_accs: Option<Vec<(nssa::AccountId, u128)>> =
-                config.initial_accounts.clone().map(|initial_accounts| {
+            let init_accs: Option<Vec<(nssa::AccountId, u128)>> = config
+                .initial_public_accounts
+                .clone()
+                .map(|initial_accounts| {
                     initial_accounts
                         .iter()
                         .map(|acc_data| (acc_data.account_id, acc_data.balance))
@@ -419,8 +421,8 @@ mod tests {
             },
             retry_pending_blocks_timeout: Duration::from_secs(60 * 4),
             indexer_rpc_url: "ws://localhost:8779".parse().unwrap(),
-            initial_accounts: None,
-            initial_commitments: None,
+            initial_public_accounts: None,
+            initial_private_accounts: None,
         }
     }
 

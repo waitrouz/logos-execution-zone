@@ -58,7 +58,7 @@ impl IndexerCore {
         let genesis_block = hashable_data.into_pending_block(&signing_key, channel_genesis_msg_id);
 
         let initial_commitments: Option<Vec<nssa_core::Commitment>> = config
-            .initial_commitments
+            .initial_private_accounts
             .clone()
             .map(|initial_commitments| {
                 initial_commitments
@@ -76,8 +76,10 @@ impl IndexerCore {
                     .collect()
             });
 
-        let init_accs: Option<Vec<(nssa::AccountId, u128)>> =
-            config.initial_accounts.clone().map(|initial_accounts| {
+        let init_accs: Option<Vec<(nssa::AccountId, u128)>> = config
+            .initial_public_accounts
+            .clone()
+            .map(|initial_accounts| {
                 initial_accounts
                     .iter()
                     .map(|acc_data| (acc_data.account_id, acc_data.balance))

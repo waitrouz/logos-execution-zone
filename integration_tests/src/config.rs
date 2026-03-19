@@ -105,7 +105,7 @@ impl InitialData {
         }
     }
 
-    fn sequencer_initial_accounts(&self) -> Vec<PublicAccountPublicInitialData> {
+    fn sequencer_initial_public_accounts(&self) -> Vec<PublicAccountPublicInitialData> {
         self.public_accounts
             .iter()
             .map(|(priv_key, balance)| {
@@ -119,7 +119,7 @@ impl InitialData {
             .collect()
     }
 
-    fn sequencer_initial_commitments(&self) -> Vec<PrivateAccountPublicInitialData> {
+    fn sequencer_initial_private_accounts(&self) -> Vec<PrivateAccountPublicInitialData> {
         self.private_accounts
             .iter()
             .map(|(key_chain, account)| PrivateAccountPublicInitialData {
@@ -184,8 +184,8 @@ pub fn indexer_config(
                 max_retries: 10,
             },
         },
-        initial_accounts: Some(initial_data.sequencer_initial_accounts()),
-        initial_commitments: Some(initial_data.sequencer_initial_commitments()),
+        initial_public_accounts: Some(initial_data.sequencer_initial_public_accounts()),
+        initial_private_accounts: Some(initial_data.sequencer_initial_private_accounts()),
         signing_key: [37; 32],
         channel_id: bedrock_channel_id(),
     })
@@ -216,8 +216,8 @@ pub fn sequencer_config(
         block_create_timeout,
         retry_pending_blocks_timeout: Duration::from_secs(120),
         port: 0,
-        initial_accounts: Some(initial_data.sequencer_initial_accounts()),
-        initial_commitments: Some(initial_data.sequencer_initial_commitments()),
+        initial_public_accounts: Some(initial_data.sequencer_initial_public_accounts()),
+        initial_private_accounts: Some(initial_data.sequencer_initial_private_accounts()),
         signing_key: [37; 32],
         bedrock_config: BedrockConfig {
             backoff: BackoffConfig {

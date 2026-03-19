@@ -36,9 +36,9 @@ pub struct IndexerConfig {
     pub bedrock_client_config: ClientConfig,
     pub channel_id: ChannelId,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub initial_accounts: Option<Vec<PublicAccountPublicInitialData>>,
+    pub initial_public_accounts: Option<Vec<PublicAccountPublicInitialData>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub initial_commitments: Option<Vec<PrivateAccountPublicInitialData>>,
+    pub initial_private_accounts: Option<Vec<PrivateAccountPublicInitialData>>,
 }
 
 impl IndexerConfig {

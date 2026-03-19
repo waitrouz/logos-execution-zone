@@ -50,9 +50,9 @@ pub struct SequencerConfig {
     /// Indexer RPC URL.
     pub indexer_rpc_url: Url,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub initial_accounts: Option<Vec<PublicAccountPublicInitialData>>,
+    pub initial_public_accounts: Option<Vec<PublicAccountPublicInitialData>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub initial_commitments: Option<Vec<PrivateAccountPublicInitialData>>,
+    pub initial_private_accounts: Option<Vec<PrivateAccountPublicInitialData>>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
