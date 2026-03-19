@@ -2,14 +2,12 @@ use std::{collections::HashMap, path::PathBuf, str::FromStr as _};
 
 use anyhow::{Context as _, Result};
 use base58::ToBase58 as _;
-use key_protocol::{
-    initial_state::{PrivateAccountPrivateInitialData, PublicAccountPrivateInitialData},
-    key_protocol_core::NSSAUserData,
-};
+use key_protocol::key_protocol_core::NSSAUserData;
 use nssa::Account;
 use nssa_core::account::Nonce;
 use rand::{RngCore as _, rngs::OsRng};
 use serde::Serialize;
+use testnet_initial_state::{PrivateAccountPrivateInitialData, PublicAccountPrivateInitialData};
 
 use crate::{
     HOME_DIR_ENV_VAR,

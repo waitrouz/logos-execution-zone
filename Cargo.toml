@@ -33,6 +33,7 @@ members = [
   "examples/program_deployment/methods",
   "examples/program_deployment/methods/guest",
   "bedrock_client",
+  "testnet_initial_state",
 ]
 
 [workspace.dependencies]
@@ -57,6 +58,7 @@ amm_core = { path = "programs/amm/core" }
 amm_program = { path = "programs/amm" }
 test_program_methods = { path = "test_program_methods" }
 bedrock_client = { path = "bedrock_client" }
+testnet_initial_state = { path = "testnet_initial_state" }
 
 tokio = { version = "1.50", features = [
   "net",

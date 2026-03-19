@@ -6,13 +6,13 @@ use common::{
     HashType, PINATA_BASE58,
     block::{Block, HashableBlockData},
 };
-use key_protocol::initial_state::initial_state_testnet;
 use log::{debug, error, info};
 use logos_blockchain_core::mantle::{
     Op, SignedMantleTx,
     ops::channel::{ChannelId, inscribe::InscriptionOp},
 };
 use nssa::V02State;
+use testnet_initial_state::initial_state_testnet;
 
 use crate::{block_store::IndexerStore, config::IndexerConfig};
 
@@ -59,7 +59,7 @@ impl IndexerCore {
 
         let initial_commitments: Option<Vec<nssa_core::Commitment>> = config
             .initial_private_accounts
-            .clone()
+            .as_ref()
             .map(|initial_commitments| {
                 initial_commitments
                     .iter()
@@ -78,7 +78,7 @@ impl IndexerCore {
 
         let init_accs: Option<Vec<(nssa::AccountId, u128)>> = config
             .initial_public_accounts
-            .clone()
+            .as_ref()
             .map(|initial_accounts| {
                 initial_accounts
                     .iter()

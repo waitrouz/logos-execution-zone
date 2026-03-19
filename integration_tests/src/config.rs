@@ -3,16 +3,14 @@ use std::{net::SocketAddr, path::PathBuf, time::Duration};
 use anyhow::{Context as _, Result};
 use bytesize::ByteSize;
 use indexer_service::{BackoffConfig, ChannelId, ClientConfig, IndexerConfig};
-use key_protocol::{
-    initial_state::{
-        PrivateAccountPrivateInitialData, PrivateAccountPublicInitialData,
-        PublicAccountPrivateInitialData, PublicAccountPublicInitialData,
-    },
-    key_management::KeyChain,
-};
+use key_protocol::key_management::KeyChain;
 use nssa::{Account, AccountId, PrivateKey, PublicKey};
 use nssa_core::{account::Data, program::DEFAULT_PROGRAM_ID};
 use sequencer_core::config::{BedrockConfig, SequencerConfig};
+use testnet_initial_state::{
+    PrivateAccountPrivateInitialData, PrivateAccountPublicInitialData,
+    PublicAccountPrivateInitialData, PublicAccountPublicInitialData,
+};
 use url::Url;
 use wallet::config::{InitialAccountData, WalletConfig};
 

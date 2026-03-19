@@ -23,13 +23,13 @@ use common::{
     transaction::{NSSATransaction, TransactionMalformationError},
 };
 use itertools::Itertools as _;
-use key_protocol::initial_state::initial_accounts;
 use log::warn;
 use nssa::{self, program::Program};
 use sequencer_core::{
     block_settlement_client::BlockSettlementClientTrait, indexer_client::IndexerClientTrait,
 };
 use serde_json::Value;
+use testnet_initial_state::initial_accounts;
 
 use super::{JsonHandler, respond, types::err_rpc::RpcErr};
 
@@ -342,13 +342,13 @@ mod tests {
     use common::{
         config::BasicAuth, test_utils::sequencer_sign_key_for_testing, transaction::NSSATransaction,
     };
-    use key_protocol::initial_state::{initial_accounts, initial_pub_accounts_private_keys};
     use sequencer_core::{
         config::{BedrockConfig, SequencerConfig},
         mock::{MockBlockSettlementClient, MockIndexerClient, SequencerCoreWithMockClients},
     };
     use serde_json::Value;
     use tempfile::tempdir;
+    use testnet_initial_state::{initial_accounts, initial_pub_accounts_private_keys};
     use tokio::sync::Mutex;
 
     use crate::rpc_handler;

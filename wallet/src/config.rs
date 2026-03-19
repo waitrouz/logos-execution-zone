@@ -8,17 +8,15 @@ use std::{
 use anyhow::{Context as _, Result};
 use common::config::BasicAuth;
 use humantime_serde;
-use key_protocol::{
-    initial_state::{
-        PrivateAccountPrivateInitialData, PublicAccountPrivateInitialData,
-        initial_priv_accounts_private_keys, initial_pub_accounts_private_keys,
-    },
-    key_management::key_tree::{
-        chain_index::ChainIndex, keys_private::ChildKeysPrivate, keys_public::ChildKeysPublic,
-    },
+use key_protocol::key_management::key_tree::{
+    chain_index::ChainIndex, keys_private::ChildKeysPrivate, keys_public::ChildKeysPublic,
 };
 use log::warn;
 use serde::{Deserialize, Serialize};
+use testnet_initial_state::{
+    PrivateAccountPrivateInitialData, PublicAccountPrivateInitialData,
+    initial_priv_accounts_private_keys, initial_pub_accounts_private_keys,
+};
 use url::Url;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

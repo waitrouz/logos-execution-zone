@@ -1,12 +1,11 @@
 use common::PINATA_BASE58;
-use nssa::{Account, AccountId, Data, PrivateKey, PublicKey, V02State};
-use nssa_core::{NullifierPublicKey, encryption::shared_key_derivation::Secp256k1Point};
-use serde::{Deserialize, Serialize};
-
-use crate::key_management::{
+use key_protocol::key_management::{
     KeyChain,
     secret_holders::{PrivateKeyHolder, SecretSpendingKey},
 };
+use nssa::{Account, AccountId, Data, PrivateKey, PublicKey, V02State};
+use nssa_core::{NullifierPublicKey, encryption::shared_key_derivation::Secp256k1Point};
+use serde::{Deserialize, Serialize};
 
 const PRIVATE_KEY_PUB_ACC_A: [u8; 32] = [
     16, 162, 106, 154, 236, 125, 52, 184, 35, 100, 238, 174, 69, 197, 41, 77, 187, 10, 118, 75, 0,

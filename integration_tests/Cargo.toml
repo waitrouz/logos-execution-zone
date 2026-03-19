@@ -20,6 +20,7 @@ serde_json.workspace = true
 token_core.workspace = true
 indexer_service_rpc.workspace = true
 wallet-ffi.workspace = true
+testnet_initial_state.workspace = true
 
 url.workspace = true
 

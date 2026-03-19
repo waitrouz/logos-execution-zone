@@ -14,6 +14,7 @@ nssa.workspace = true
 nssa_core.workspace = true
 storage.workspace = true
 key_protocol.workspace = true
+testnet_initial_state.workspace = true
 
 anyhow.workspace = true
 log.workspace = true
@@ -29,4 +30,3 @@ async-stream.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
-

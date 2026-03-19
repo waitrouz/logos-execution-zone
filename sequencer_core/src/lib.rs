@@ -10,13 +10,13 @@ use common::{
     transaction::NSSATransaction,
 };
 use config::SequencerConfig;
-use key_protocol::initial_state::initial_state;
 use log::{error, info, warn};
 use logos_blockchain_key_management_system_service::keys::{ED25519_SECRET_KEY_SIZE, Ed25519Key};
 use mempool::{MemPool, MemPoolHandle};
 #[cfg(feature = "mock")]
 pub use mock::SequencerCoreWithMockClients;
 use nssa::V02State;
+use testnet_initial_state::initial_state;
 
 use crate::{
     block_settlement_client::{BlockSettlementClient, BlockSettlementClientTrait, MsgId},
@@ -386,9 +386,9 @@ mod tests {
 
     use bedrock_client::BackoffConfig;
     use common::{test_utils::sequencer_sign_key_for_testing, transaction::NSSATransaction};
-    use key_protocol::initial_state::{initial_accounts, initial_pub_accounts_private_keys};
     use logos_blockchain_core::mantle::ops::channel::ChannelId;
     use mempool::MemPoolHandle;
+    use testnet_initial_state::{initial_accounts, initial_pub_accounts_private_keys};
 
     use crate::{
         config::{BedrockConfig, SequencerConfig},

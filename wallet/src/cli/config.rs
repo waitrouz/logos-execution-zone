@@ -69,7 +69,17 @@ impl WalletSubcommand for ConfigSubcommand {
                             );
                         }
                         "initial_accounts" => {
-                            println!("{:#?}", InitialAccountData::create_initial_accounts_data());
+                            println!(
+                                "{:#?}",
+                                wallet_core
+                                    .storage
+                                    .wallet_config
+                                    .initial_accounts
+                                    .clone()
+                                    .unwrap_or_else(
+                                        InitialAccountData::create_initial_accounts_data
+                                    )
+                            );
                         }
                         "basic_auth" => {
                             if let Some(basic_auth) = &wallet_core.storage.wallet_config.basic_auth

@@ -9,11 +9,9 @@ use anyhow::{Context as _, Result};
 pub use bedrock_client::BackoffConfig;
 use common::config::BasicAuth;
 use humantime_serde;
-use key_protocol::initial_state::{
-    PrivateAccountPublicInitialData, PublicAccountPublicInitialData,
-};
 pub use logos_blockchain_core::mantle::ops::channel::ChannelId;
 use serde::{Deserialize, Serialize};
+use testnet_initial_state::{PrivateAccountPublicInitialData, PublicAccountPublicInitialData};
 use url::Url;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
