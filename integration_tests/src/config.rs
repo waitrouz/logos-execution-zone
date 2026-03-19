@@ -204,7 +204,6 @@ pub fn sequencer_config(
 
     Ok(SequencerConfig {
         home,
-        override_rust_log: None,
         genesis_id: 1,
         is_genesis_random: true,
         max_num_tx_in_block,
@@ -212,7 +211,6 @@ pub fn sequencer_config(
         mempool_max_size,
         block_create_timeout,
         retry_pending_blocks_timeout: Duration::from_secs(120),
-        port: 0,
         initial_accounts: initial_data.sequencer_initial_accounts(),
         initial_commitments: initial_data.sequencer_initial_commitments(),
         signing_key: [37; 32],
@@ -236,7 +234,6 @@ pub fn wallet_config(
     initial_data: &InitialData,
 ) -> Result<WalletConfig> {
     Ok(WalletConfig {
-        override_rust_log: None,
         sequencer_addr: addr_to_url(UrlProtocol::Http, sequencer_addr)
             .context("Failed to convert sequencer addr to URL")?,
         seq_poll_timeout: Duration::from_secs(30),
