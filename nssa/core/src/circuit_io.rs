@@ -1,11 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    Commitment, CommitmentSetDigest, MembershipProof, Nullifier, NullifierPublicKey,
-    NullifierSecretKey, SharedSecretKey,
-    account::{Account, AccountWithMetadata},
-    encryption::Ciphertext,
-    program::{ProgramId, ProgramOutput},
+    account::{Account, AccountWithMetadata}, encryption::Ciphertext, program::{ProgramId, ProgramOutput, ValidityWindow}, Commitment, CommitmentSetDigest, MembershipProof, Nullifier, NullifierPublicKey, NullifierSecretKey, SharedSecretKey
 };
 
 #[derive(Serialize, Deserialize)]
@@ -36,6 +32,7 @@ pub struct PrivacyPreservingCircuitOutput {
     pub ciphertexts: Vec<Ciphertext>,
     pub new_commitments: Vec<Commitment>,
     pub new_nullifiers: Vec<(Nullifier, CommitmentSetDigest)>,
+    pub validity_window: ValidityWindow
 }
 
 #[cfg(feature = "host")]
@@ -101,6 +98,7 @@ mod tests {
                 ),
                 [0xab; 32],
             )],
+            validity_window: (Some(1), None),
         };
         let bytes = output.to_bytes();
         let output_from_slice: PrivacyPreservingCircuitOutput = from_slice(&bytes).unwrap();

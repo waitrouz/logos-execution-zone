@@ -235,6 +235,7 @@ pub struct PrivacyPreservingMessage {
     pub encrypted_private_post_states: Vec<EncryptedAccountData>,
     pub new_commitments: Vec<Commitment>,
     pub new_nullifiers: Vec<(Nullifier, CommitmentSetDigest)>,
+    pub validity_window: ValidityWindow,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
@@ -299,6 +300,9 @@ pub struct Nullifier(
     #[schemars(with = "String", description = "base64-encoded nullifier")]
     pub [u8; 32],
 );
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+pub struct ValidityWindow(pub (Option<BlockId>, Option<BlockId>));
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 pub struct CommitmentSetDigest(

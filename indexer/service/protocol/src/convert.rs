@@ -3,11 +3,7 @@
 use nssa_core::account::Nonce;
 
 use crate::{
-    Account, AccountId, BedrockStatus, Block, BlockBody, BlockHeader, Ciphertext, Commitment,
-    CommitmentSetDigest, Data, EncryptedAccountData, EphemeralPublicKey, HashType, MantleMsgId,
-    Nullifier, PrivacyPreservingMessage, PrivacyPreservingTransaction, ProgramDeploymentMessage,
-    ProgramDeploymentTransaction, ProgramId, Proof, PublicKey, PublicMessage, PublicTransaction,
-    Signature, Transaction, WitnessSet,
+    Account, AccountId, BedrockStatus, Block, BlockBody, BlockHeader, Ciphertext, Commitment, CommitmentSetDigest, Data, EncryptedAccountData, EphemeralPublicKey, HashType, MantleMsgId, Nullifier, PrivacyPreservingMessage, PrivacyPreservingTransaction, ProgramDeploymentMessage, ProgramDeploymentTransaction, ProgramId, Proof, PublicKey, PublicMessage, PublicTransaction, Signature, Transaction, ValidityWindow, WitnessSet
 };
 
 // ============================================================================
@@ -287,6 +283,7 @@ impl From<nssa::privacy_preserving_transaction::message::Message> for PrivacyPre
             encrypted_private_post_states,
             new_commitments,
             new_nullifiers,
+            validity_window,
         } = value;
         Self {
             public_account_ids: public_account_ids.into_iter().map(Into::into).collect(),
@@ -301,6 +298,7 @@ impl From<nssa::privacy_preserving_transaction::message::Message> for PrivacyPre
                 .into_iter()
                 .map(|(n, d)| (n.into(), d.into()))
                 .collect(),
+            validity_window: ValidityWindow(validity_window),
         }
     }
 }
@@ -316,6 +314,7 @@ impl TryFrom<PrivacyPreservingMessage> for nssa::privacy_preserving_transaction:
             encrypted_private_post_states,
             new_commitments,
             new_nullifiers,
+            validity_window,
         } = value;
         Ok(Self {
             public_account_ids: public_account_ids.into_iter().map(Into::into).collect(),
@@ -336,6 +335,7 @@ impl TryFrom<PrivacyPreservingMessage> for nssa::privacy_preserving_transaction:
                 .into_iter()
                 .map(|(n, d)| (n.into(), d.into()))
                 .collect(),
+            validity_window: validity_window.0,
         })
     }
 }
