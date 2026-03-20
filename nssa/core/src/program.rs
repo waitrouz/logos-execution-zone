@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+#[cfg(feature = "host")]
+use borsh::{BorshDeserialize, BorshSerialize};
 use risc0_zkvm::{DeserializeOwned, guest::env, serde::Deserializer};
 use serde::{Deserialize, Serialize};
 
@@ -152,7 +154,68 @@ impl AccountPostState {
 }
 
 pub type BlockId = u64;
-pub type ValidityWindow = (Option<BlockId>, Option<BlockId>);
+
+#[derive(Serialize, Deserialize, Clone, Copy)]
+#[cfg_attr(
+    any(feature = "host", test),
+    derive(Debug, PartialEq, Eq, BorshSerialize, BorshDeserialize)
+)]
+pub struct ValidityWindow {
+    from: Option<BlockId>,
+    to: Option<BlockId>,
+}
+
+impl ValidityWindow {
+    #[must_use]
+    pub const fn new_unbounded() -> Self {
+        Self {
+            from: None,
+            to: None,
+        }
+    }
+
+    /// Valid for block IDs in the range [from, to), where `from` is included and `to` is excluded.
+    #[must_use]
+    pub fn is_valid_for_block_id(&self, id: BlockId) -> bool {
+        self.from.is_none_or(|start| id >= start) && self.to.is_none_or(|end| id < end)
+    }
+
+    const fn check_window(&self) -> Result<(), InvalidWindow> {
+        if let (Some(from_id), Some(until_id)) = (self.from, self.to)
+            && from_id >= until_id
+        {
+            Err(InvalidWindow)
+        } else {
+            Ok(())
+        }
+    }
+
+    #[must_use]
+    pub const fn from(&self) -> Option<BlockId> {
+        self.from
+    }
+
+    #[must_use]
+    pub const fn to(&self) -> Option<BlockId> {
+        self.to
+    }
+}
+impl TryFrom<(Option<BlockId>, Option<BlockId>)> for ValidityWindow {
+    type Error = InvalidWindow;
+
+    fn try_from(value: (Option<BlockId>, Option<BlockId>)) -> Result<Self, Self::Error> {
+        let this = Self {
+            from: value.0,
+            to: value.1,
+        };
+        this.check_window()?;
+        Ok(this)
+    }
+}
+
+#[derive(Debug, thiserror::Error, Clone, Copy, PartialEq, Eq)]
+#[error("Invalid window")]
+pub struct InvalidWindow;
 
 #[derive(Serialize, Deserialize, Clone)]
 #[cfg_attr(any(feature = "host", test), derive(Debug, PartialEq, Eq))]
@@ -166,6 +229,8 @@ pub struct ProgramOutput {
     /// The list of chained calls to other programs.
     pub chained_calls: Vec<ChainedCall>,
     /// The window where the program output is valid.
+    /// Valid for block IDs in the range [from, to), where `from` is included and `to` is excluded.
+    /// `None` means unbounded on that side.
     pub validity_window: ValidityWindow,
 }
 
@@ -181,7 +246,7 @@ impl ProgramOutput {
             pre_states,
             post_states,
             chained_calls: Vec::new(),
-            validity_window: (None, None),
+            validity_window: ValidityWindow::new_unbounded(),
         }
     }
 
@@ -195,16 +260,16 @@ impl ProgramOutput {
         self
     }
 
-    #[must_use]
-    pub const fn valid_from_id(mut self, id: BlockId) -> Self {
-        self.validity_window.0 = Some(id);
-        self
+    pub fn valid_from_id(mut self, id: Option<BlockId>) -> Result<Self, InvalidWindow> {
+        self.validity_window.from = id;
+        self.validity_window.check_window()?;
+        Ok(self)
     }
 
-    #[must_use]
-    pub const fn valid_until_id(mut self, id: BlockId) -> Self {
-        self.validity_window.1 = Some(id);
-        self
+    pub fn valid_until_id(mut self, id: Option<BlockId>) -> Result<Self, InvalidWindow> {
+        self.validity_window.to = id;
+        self.validity_window.check_window()?;
+        Ok(self)
     }
 }
 

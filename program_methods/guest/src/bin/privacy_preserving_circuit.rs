@@ -28,17 +28,21 @@ impl ExecutionState {
     pub fn derive_from_outputs(program_id: ProgramId, program_outputs: Vec<ProgramOutput>) -> Self {
         let valid_from_id = program_outputs
             .iter()
-            .filter_map(|output| output.validity_window.0)
+            .filter_map(|output| output.validity_window.from())
             .max();
         let valid_until_id = program_outputs
             .iter()
-            .filter_map(|output| output.validity_window.1)
+            .filter_map(|output| output.validity_window.to())
             .min();
+
+        let validity_window = (valid_from_id, valid_until_id).try_into().expect(
+            "There should be non empty intersection in the program output validity windows",
+        );
 
         let mut execution_state = Self {
             pre_states: Vec::new(),
             post_states: HashMap::new(),
-            validity_window: (valid_from_id, valid_until_id),
+            validity_window,
         };
 
         let Some(first_output) = program_outputs.first() else {

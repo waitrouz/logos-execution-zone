@@ -302,13 +302,13 @@ impl From<nssa::privacy_preserving_transaction::message::Message> for PrivacyPre
                 .into_iter()
                 .map(|(n, d)| (n.into(), d.into()))
                 .collect(),
-            validity_window: ValidityWindow(validity_window),
+            validity_window: ValidityWindow((validity_window.from(), validity_window.to())),
         }
     }
 }
 
 impl TryFrom<PrivacyPreservingMessage> for nssa::privacy_preserving_transaction::message::Message {
-    type Error = nssa_core::account::data::DataTooBigError;
+    type Error = nssa::error::NssaError;
 
     fn try_from(value: PrivacyPreservingMessage) -> Result<Self, Self::Error> {
         let PrivacyPreservingMessage {
@@ -329,7 +329,8 @@ impl TryFrom<PrivacyPreservingMessage> for nssa::privacy_preserving_transaction:
             public_post_states: public_post_states
                 .into_iter()
                 .map(TryInto::try_into)
-                .collect::<Result<Vec<_>, _>>()?,
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(|e| nssa::error::NssaError::InvalidInput(format!("{e}")))?,
             encrypted_private_post_states: encrypted_private_post_states
                 .into_iter()
                 .map(Into::into)
@@ -339,7 +340,10 @@ impl TryFrom<PrivacyPreservingMessage> for nssa::privacy_preserving_transaction:
                 .into_iter()
                 .map(|(n, d)| (n.into(), d.into()))
                 .collect(),
-            validity_window: validity_window.0,
+            validity_window: validity_window
+                .0
+                .try_into()
+                .map_err(|e| nssa::error::NssaError::InvalidInput(format!("{e}")))?,
         })
     }
 }
@@ -483,14 +487,7 @@ impl TryFrom<PrivacyPreservingTransaction> for nssa::PrivacyPreservingTransactio
             witness_set,
         } = value;
 
-        Ok(Self::new(
-            message
-                .try_into()
-                .map_err(|err: nssa_core::account::data::DataTooBigError| {
-                    nssa::error::NssaError::InvalidInput(err.to_string())
-                })?,
-            witness_set.try_into()?,
-        ))
+        Ok(Self::new(message.try_into()?, witness_set.try_into()?))
     }
 }
 

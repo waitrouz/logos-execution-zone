@@ -19,18 +19,15 @@ fn main() {
 
     let post = pre.account.clone();
 
-    let mut output = ProgramOutput::new(
+    let output = ProgramOutput::new(
         instruction_words,
         vec![pre],
         vec![AccountPostState::new(post)],
-    );
-
-    if let Some(id) = from_id {
-        output = output.valid_from_id(id);
-    }
-    if let Some(id) = until_id {
-        output = output.valid_until_id(id);
-    }
+    )
+    .valid_from_id(from_id)
+    .unwrap()
+    .valid_until_id(until_id)
+    .unwrap();
 
     output.write();
 }

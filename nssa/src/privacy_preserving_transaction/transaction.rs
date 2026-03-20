@@ -93,6 +93,11 @@ impl PrivacyPreservingTransaction {
             }
         }
 
+        // Verify validity window
+        if !message.validity_window.is_valid_for_block_id(block_id) {
+            return Err(NssaError::OutOfValidityWindow);
+        }
+
         // Build pre_states for proof verification
         let public_pre_states: Vec<_> = message
             .public_account_ids
@@ -122,18 +127,6 @@ impl PrivacyPreservingTransaction {
 
         // 6. Nullifier uniqueness
         state.check_nullifiers_are_valid(&message.new_nullifiers)?;
-
-        // 7. Verify validity window
-        if let Some(from_id) = message.validity_window.0
-            && block_id < from_id
-        {
-            return Err(NssaError::OutOfValidityWindow);
-        }
-        if let Some(until_id) = message.validity_window.1
-            && until_id < block_id
-        {
-            return Err(NssaError::OutOfValidityWindow);
-        }
 
         Ok(message
             .public_account_ids

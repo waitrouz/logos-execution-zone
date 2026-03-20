@@ -165,7 +165,7 @@ pub mod tests {
             encrypted_private_post_states,
             new_commitments,
             new_nullifiers,
-            validity_window: (None, None),
+            validity_window: (None, None).try_into().unwrap(),
         }
     }
 

@@ -192,12 +192,12 @@ impl PublicTransaction {
             );
 
             // Verify validity window
-            if let Some(from_id) = program_output.validity_window.0 {
-                ensure!(from_id <= block_id, NssaError::OutOfValidityWindow);
-            }
-            if let Some(until_id) = program_output.validity_window.1 {
-                ensure!(until_id >= block_id, NssaError::OutOfValidityWindow);
-            }
+            ensure!(
+                program_output
+                    .validity_window
+                    .is_valid_for_block_id(block_id),
+                NssaError::OutOfValidityWindow
+            );
 
             for post in program_output
                 .post_states

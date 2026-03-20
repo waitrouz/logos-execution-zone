@@ -340,7 +340,7 @@ pub mod tests {
         Commitment, Nullifier, NullifierPublicKey, NullifierSecretKey, SharedSecretKey,
         account::{Account, AccountId, AccountWithMetadata, Nonce, data::Data},
         encryption::{EphemeralPublicKey, Scalar, ViewingPublicKey},
-        program::{BlockId, PdaSeed, ProgramId, ValidityWindow},
+        program::{BlockId, PdaSeed, ProgramId},
     };
 
     use crate::{
@@ -3013,7 +3013,7 @@ pub mod tests {
     #[test_case::test_case((None, None), 0; "no bounds - always valid")]
     #[test_case::test_case((None, None), 100; "no bounds - always valid 2")]
     fn validity_window_works_in_public_transactions(
-        validity_window: ValidityWindow,
+        validity_window: (Option<BlockId>, Option<BlockId>),
         block_id: BlockId,
     ) {
         let validity_window_program = Program::validity_window();
@@ -3035,10 +3035,10 @@ pub mod tests {
             PublicTransaction::new(message, witness_set)
         };
         let result = state.transition_from_public_transaction(&tx, block_id);
-        let is_inside_validity_window = match (validity_window.0, validity_window.1) {
-            (Some(s), Some(e)) => s <= block_id && block_id <= e,
+        let is_inside_validity_window = match validity_window {
+            (Some(s), Some(e)) => s <= block_id && block_id < e,
             (Some(s), None) => s <= block_id,
-            (None, Some(e)) => block_id <= e,
+            (None, Some(e)) => block_id < e,
             (None, None) => true,
         };
         if is_inside_validity_window {
@@ -3062,7 +3062,7 @@ pub mod tests {
     #[test_case::test_case((None, None), 0; "no bounds - always valid")]
     #[test_case::test_case((None, None), 100; "no bounds - always valid 2")]
     fn validity_window_works_in_privacy_preserving_transactions(
-        validity_window: ValidityWindow,
+        validity_window: (Option<BlockId>, Option<BlockId>),
         block_id: BlockId,
     ) {
         let validity_window_program = Program::validity_window();
@@ -3097,10 +3097,10 @@ pub mod tests {
             PrivacyPreservingTransaction::new(message, witness_set)
         };
         let result = state.transition_from_privacy_preserving_transaction(&tx, block_id);
-        let is_inside_validity_window = match (validity_window.0, validity_window.1) {
-            (Some(s), Some(e)) => s <= block_id && block_id <= e,
+        let is_inside_validity_window = match validity_window {
+            (Some(s), Some(e)) => s <= block_id && block_id < e,
             (Some(s), None) => s <= block_id,
-            (None, Some(e)) => block_id <= e,
+            (None, Some(e)) => block_id < e,
             (None, None) => true,
         };
         if is_inside_validity_window {
