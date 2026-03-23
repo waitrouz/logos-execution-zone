@@ -1,7 +1,7 @@
 use std::{path::Path, sync::Arc};
 
 use common::block::Block;
-use nssa::V02State;
+use nssa::V03State;
 use rocksdb::{
     BoundColumnFamily, ColumnFamilyDescriptor, DBWithThreadMode, MultiThreaded, Options,
 };
@@ -65,7 +65,7 @@ impl RocksDBIO {
     pub fn open_or_create(
         path: &Path,
         genesis_block: &Block,
-        initial_state: &V02State,
+        initial_state: &V03State,
     ) -> DbResult<Self> {
         let mut cf_opts = Options::default();
         cf_opts.set_max_write_buffer_number(16);
@@ -160,7 +160,7 @@ impl RocksDBIO {
 
     // State
 
-    pub fn calculate_state_for_id(&self, block_id: u64) -> DbResult<V02State> {
+    pub fn calculate_state_for_id(&self, block_id: u64) -> DbResult<V03State> {
         let last_block = self.get_meta_last_block_in_db()?;
 
         if block_id <= last_block {
@@ -205,7 +205,7 @@ impl RocksDBIO {
         }
     }
 
-    pub fn final_state(&self) -> DbResult<V02State> {
+    pub fn final_state(&self) -> DbResult<V03State> {
         self.calculate_state_for_id(self.get_meta_last_block_in_db()?)
     }
 }
@@ -253,7 +253,7 @@ mod tests {
         let dbio = RocksDBIO::open_or_create(
             temdir_path,
             &genesis_block(),
-            &nssa::V02State::new_with_genesis_accounts(&[(acc1(), 10000), (acc2(), 20000)], &[]),
+            &nssa::V03State::new_with_genesis_accounts(&[(acc1(), 10000), (acc2(), 20000)], &[]),
         )
         .unwrap();
 
@@ -290,7 +290,7 @@ mod tests {
         let dbio = RocksDBIO::open_or_create(
             temdir_path,
             &genesis_block(),
-            &nssa::V02State::new_with_genesis_accounts(&[(acc1(), 10000), (acc2(), 20000)], &[]),
+            &nssa::V03State::new_with_genesis_accounts(&[(acc1(), 10000), (acc2(), 20000)], &[]),
         )
         .unwrap();
 
@@ -343,7 +343,7 @@ mod tests {
         let dbio = RocksDBIO::open_or_create(
             temdir_path,
             &genesis_block(),
-            &nssa::V02State::new_with_genesis_accounts(&[(acc1(), 10000), (acc2(), 20000)], &[]),
+            &nssa::V03State::new_with_genesis_accounts(&[(acc1(), 10000), (acc2(), 20000)], &[]),
         )
         .unwrap();
 
@@ -416,7 +416,7 @@ mod tests {
         let dbio = RocksDBIO::open_or_create(
             temdir_path,
             &genesis_block(),
-            &nssa::V02State::new_with_genesis_accounts(&[(acc1(), 10000), (acc2(), 20000)], &[]),
+            &nssa::V03State::new_with_genesis_accounts(&[(acc1(), 10000), (acc2(), 20000)], &[]),
         )
         .unwrap();
 
@@ -499,7 +499,7 @@ mod tests {
         let dbio = RocksDBIO::open_or_create(
             temdir_path,
             &genesis_block(),
-            &nssa::V02State::new_with_genesis_accounts(&[(acc1(), 10000), (acc2(), 20000)], &[]),
+            &nssa::V03State::new_with_genesis_accounts(&[(acc1(), 10000), (acc2(), 20000)], &[]),
         )
         .unwrap();
 
@@ -595,7 +595,7 @@ mod tests {
         let dbio = RocksDBIO::open_or_create(
             temdir_path,
             &genesis_block(),
-            &nssa::V02State::new_with_genesis_accounts(&[(acc1(), 10000), (acc2(), 20000)], &[]),
+            &nssa::V03State::new_with_genesis_accounts(&[(acc1(), 10000), (acc2(), 20000)], &[]),
         )
         .unwrap();
 

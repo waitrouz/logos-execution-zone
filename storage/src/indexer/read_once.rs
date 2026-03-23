@@ -1,7 +1,7 @@
 use super::{
     Block, DB_META_FIRST_BLOCK_IN_DB_KEY, DB_META_FIRST_BLOCK_SET_KEY,
     DB_META_LAST_BLOCK_IN_DB_KEY, DB_META_LAST_BREAKPOINT_ID,
-    DB_META_LAST_OBSERVED_L1_LIB_HEADER_ID_IN_DB_KEY, DbError, DbResult, RocksDBIO, V02State,
+    DB_META_LAST_OBSERVED_L1_LIB_HEADER_ID_IN_DB_KEY, DbError, DbResult, RocksDBIO, V03State,
 };
 
 #[expect(clippy::multiple_inherent_impl, reason = "Readability")]
@@ -175,7 +175,7 @@ impl RocksDBIO {
 
     // State
 
-    pub fn get_breakpoint(&self, br_id: u64) -> DbResult<V02State> {
+    pub fn get_breakpoint(&self, br_id: u64) -> DbResult<V03State> {
         let cf_br = self.breakpoint_column();
         let res = self
             .db
@@ -191,7 +191,7 @@ impl RocksDBIO {
             .map_err(|rerr| DbError::rocksdb_cast_message(rerr, None))?;
 
         if let Some(data) = res {
-            Ok(borsh::from_slice::<V02State>(&data).map_err(|serr| {
+            Ok(borsh::from_slice::<V03State>(&data).map_err(|serr| {
                 DbError::borsh_cast_message(
                     serr,
                     Some("Failed to deserialize breakpoint data".to_owned()),

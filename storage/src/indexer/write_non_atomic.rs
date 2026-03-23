@@ -1,7 +1,7 @@
 use super::{
     BREAKPOINT_INTERVAL, DB_META_FIRST_BLOCK_SET_KEY, DB_META_LAST_BLOCK_IN_DB_KEY,
     DB_META_LAST_BREAKPOINT_ID, DB_META_LAST_OBSERVED_L1_LIB_HEADER_ID_IN_DB_KEY, DbError,
-    DbResult, RocksDBIO, V02State,
+    DbResult, RocksDBIO, V03State,
 };
 
 #[expect(clippy::multiple_inherent_impl, reason = "Readability")]
@@ -101,7 +101,7 @@ impl RocksDBIO {
 
     // State
 
-    pub fn put_breakpoint(&self, br_id: u64, breakpoint: &V02State) -> DbResult<()> {
+    pub fn put_breakpoint(&self, br_id: u64, breakpoint: &V03State) -> DbResult<()> {
         let cf_br = self.breakpoint_column();
 
         self.db
