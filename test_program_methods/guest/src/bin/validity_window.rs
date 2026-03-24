@@ -1,8 +1,13 @@
 use nssa_core::program::{
-    AccountPostState, ProgramInput, ProgramOutput, ValidityWindow, read_nssa_inputs,
+    AccountPostState, BlockId, ProgramInput, ProgramOutput, Timestamp, read_nssa_inputs,
 };
 
-type Instruction = ValidityWindow;
+type Instruction = (
+    Option<BlockId>,
+    Option<BlockId>,
+    Option<Timestamp>,
+    Option<Timestamp>,
+);
 
 fn main() {
     let (
@@ -24,6 +29,7 @@ fn main() {
         vec![pre],
         vec![AccountPostState::new(post)],
     )
-    .with_validity_window(validity_window)
+    .try_with_validity_window(validity_window)
+    .unwrap()
     .write();
 }
