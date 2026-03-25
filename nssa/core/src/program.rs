@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-#[cfg(feature = "host")]
+#[cfg(any(feature = "host", test))]
 use borsh::{BorshDeserialize, BorshSerialize};
 use risc0_zkvm::{DeserializeOwned, guest::env, serde::Deserializer};
 use serde::{Deserialize, Serialize};
@@ -166,6 +166,7 @@ pub struct ValidityWindow {
 }
 
 impl ValidityWindow {
+    /// Creates a window with no bounds, valid for every block ID.
     #[must_use]
     pub const fn new_unbounded() -> Self {
         Self {
@@ -174,12 +175,14 @@ impl ValidityWindow {
         }
     }
 
-    /// Valid for block IDs in the range [from, to), where `from` is included and `to` is excluded.
+    /// Returns `true` if `id` falls within the half-open range `[from, to)`.
+    /// A `None` bound on either side is treated as unbounded in that direction.
     #[must_use]
     pub fn is_valid_for_block_id(&self, id: BlockId) -> bool {
         self.from.is_none_or(|start| id >= start) && self.to.is_none_or(|end| id < end)
     }
 
+    /// Returns `Err(InvalidWindow)` if both bounds are set and `from >= to`.
     const fn check_window(&self) -> Result<(), InvalidWindow> {
         if let (Some(from_id), Some(until_id)) = (self.from, self.to)
             && from_id >= until_id
@@ -190,14 +193,30 @@ impl ValidityWindow {
         }
     }
 
+    /// Inclusive lower bound. `None` means the window starts at the beginning of the chain.
     #[must_use]
     pub const fn from(&self) -> Option<BlockId> {
         self.from
     }
 
+    /// Exclusive upper bound. `None` means the window has no expiry.
     #[must_use]
     pub const fn to(&self) -> Option<BlockId> {
         self.to
+    }
+
+    /// Sets the inclusive lower bound. Returns `Err` if the updated window would be empty or inverted.
+    pub fn set_from(&mut self, id: Option<BlockId>) -> Result<(), InvalidWindow> {
+        let prev = self.from;
+        self.from = id;
+        self.check_window().inspect_err(|_| self.from = prev)
+    }
+
+    /// Sets the exclusive upper bound. Returns `Err` if the updated window would be empty or inverted.
+    pub fn set_to(&mut self, id: Option<BlockId>) -> Result<(), InvalidWindow> {
+        let prev = self.to;
+        self.to = id;
+        self.check_window().inspect_err(|_| self.to = prev)
     }
 }
 impl TryFrom<(Option<BlockId>, Option<BlockId>)> for ValidityWindow {
@@ -210,6 +229,38 @@ impl TryFrom<(Option<BlockId>, Option<BlockId>)> for ValidityWindow {
         };
         this.check_window()?;
         Ok(this)
+    }
+}
+
+impl TryFrom<std::ops::Range<BlockId>> for ValidityWindow {
+    type Error = InvalidWindow;
+
+    fn try_from(value: std::ops::Range<BlockId>) -> Result<Self, Self::Error> {
+        (Some(value.start), Some(value.end)).try_into()
+    }
+}
+
+impl From<std::ops::RangeFrom<BlockId>> for ValidityWindow {
+    fn from(value: std::ops::RangeFrom<BlockId>) -> Self {
+        Self {
+            from: Some(value.start),
+            to: None,
+        }
+    }
+}
+
+impl From<std::ops::RangeTo<BlockId>> for ValidityWindow {
+    fn from(value: std::ops::RangeTo<BlockId>) -> Self {
+        Self {
+            from: None,
+            to: Some(value.end),
+        }
+    }
+}
+
+impl From<std::ops::RangeFull> for ValidityWindow {
+    fn from(_: std::ops::RangeFull) -> Self {
+        Self::new_unbounded()
     }
 }
 
@@ -261,14 +312,12 @@ impl ProgramOutput {
     }
 
     pub fn valid_from_id(mut self, id: Option<BlockId>) -> Result<Self, InvalidWindow> {
-        self.validity_window.from = id;
-        self.validity_window.check_window()?;
+        self.validity_window.set_from(id)?;
         Ok(self)
     }
 
     pub fn valid_until_id(mut self, id: Option<BlockId>) -> Result<Self, InvalidWindow> {
-        self.validity_window.to = id;
-        self.validity_window.check_window()?;
+        self.validity_window.set_to(id)?;
         Ok(self)
     }
 }
@@ -442,6 +491,101 @@ fn validate_uniqueness_of_account_ids(pre_states: &[AccountWithMetadata]) -> boo
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn validity_window_unbounded_accepts_any_block() {
+        let w = ValidityWindow::new_unbounded();
+        assert!(w.is_valid_for_block_id(0));
+        assert!(w.is_valid_for_block_id(u64::MAX));
+    }
+
+    #[test]
+    fn validity_window_bounded_range_includes_from_excludes_to() {
+        let w: ValidityWindow = (Some(5), Some(10)).try_into().unwrap();
+        assert!(!w.is_valid_for_block_id(4));
+        assert!(w.is_valid_for_block_id(5));
+        assert!(w.is_valid_for_block_id(9));
+        assert!(!w.is_valid_for_block_id(10));
+    }
+
+    #[test]
+    fn validity_window_only_from_bound() {
+        let w: ValidityWindow = (Some(5), None).try_into().unwrap();
+        assert!(!w.is_valid_for_block_id(4));
+        assert!(w.is_valid_for_block_id(5));
+        assert!(w.is_valid_for_block_id(u64::MAX));
+    }
+
+    #[test]
+    fn validity_window_only_to_bound() {
+        let w: ValidityWindow = (None, Some(5)).try_into().unwrap();
+        assert!(w.is_valid_for_block_id(0));
+        assert!(w.is_valid_for_block_id(4));
+        assert!(!w.is_valid_for_block_id(5));
+    }
+
+    #[test]
+    fn validity_window_adjacent_bounds_are_invalid() {
+        // [5, 5) is an empty range — from == to
+        assert!(ValidityWindow::try_from((Some(5), Some(5))).is_err());
+    }
+
+    #[test]
+    fn validity_window_inverted_bounds_are_invalid() {
+        assert!(ValidityWindow::try_from((Some(10), Some(5))).is_err());
+    }
+
+    #[test]
+    fn validity_window_getters_match_construction() {
+        let w: ValidityWindow = (Some(3), Some(7)).try_into().unwrap();
+        assert_eq!(w.from(), Some(3));
+        assert_eq!(w.to(), Some(7));
+    }
+
+    #[test]
+    fn validity_window_getters_for_unbounded() {
+        let w = ValidityWindow::new_unbounded();
+        assert_eq!(w.from(), None);
+        assert_eq!(w.to(), None);
+    }
+
+    #[test]
+    fn validity_window_from_range() {
+        let w = ValidityWindow::try_from(5u64..10).unwrap();
+        assert_eq!(w.from(), Some(5));
+        assert_eq!(w.to(), Some(10));
+    }
+
+    #[test]
+    fn validity_window_from_range_empty_is_invalid() {
+        assert!(ValidityWindow::try_from(5u64..5).is_err());
+    }
+
+    #[test]
+    fn validity_window_from_range_inverted_is_invalid() {
+        assert!(ValidityWindow::try_from(10u64..5).is_err());
+    }
+
+    #[test]
+    fn validity_window_from_range_from() {
+        let w: ValidityWindow = (5u64..).into();
+        assert_eq!(w.from(), Some(5));
+        assert_eq!(w.to(), None);
+    }
+
+    #[test]
+    fn validity_window_from_range_to() {
+        let w: ValidityWindow = (..10u64).into();
+        assert_eq!(w.from(), None);
+        assert_eq!(w.to(), Some(10));
+    }
+
+    #[test]
+    fn validity_window_from_range_full() {
+        let w: ValidityWindow = (..).into();
+        assert_eq!(w.from(), None);
+        assert_eq!(w.to(), None);
+    }
 
     #[test]
     fn post_state_new_with_claim_constructor() {
