@@ -5,9 +5,9 @@ use std::{
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use nssa_core::{
-    Commitment, CommitmentSetDigest, Nullifier, PrivacyPreservingCircuitOutput,
+    Commitment, CommitmentSetDigest, Nullifier, PrivacyPreservingCircuitOutput, Timestamp,
     account::{Account, AccountWithMetadata},
-    program::{BlockId, BlockValidityWindow, Timestamp, TimestampValidityWindow},
+    program::{BlockId, BlockValidityWindow, TimestampValidityWindow},
 };
 use sha2::{Digest as _, digest::FixedOutput as _};
 

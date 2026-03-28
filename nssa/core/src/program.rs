@@ -172,8 +172,7 @@ impl AccountPostState {
 }
 
 pub type BlockId = u64;
-/// Unix timestamp in milliseconds.
-pub type Timestamp = u64;
+use crate::Timestamp;
 
 pub type BlockValidityWindow = ValidityWindow<BlockId>;
 pub type TimestampValidityWindow = ValidityWindow<Timestamp>;

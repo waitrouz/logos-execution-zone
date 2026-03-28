@@ -3,8 +3,9 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use borsh::{BorshDeserialize, BorshSerialize};
 use log::debug;
 use nssa_core::{
+    Timestamp,
     account::{Account, AccountId, AccountWithMetadata},
-    program::{BlockId, ChainedCall, Claim, DEFAULT_PROGRAM_ID, Timestamp, validate_execution},
+    program::{BlockId, ChainedCall, Claim, DEFAULT_PROGRAM_ID, validate_execution},
 };
 use sha2::{Digest as _, digest::FixedOutput as _};
 

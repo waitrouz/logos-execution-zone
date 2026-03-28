@@ -16,7 +16,7 @@ use mempool::{MemPool, MemPoolHandle};
 #[cfg(feature = "mock")]
 pub use mock::SequencerCoreWithMockClients;
 use nssa::V03State;
-use nssa_core::program::Timestamp;
+use nssa_core::Timestamp;
 pub use storage::error::DbError;
 use testnet_initial_state::initial_state;
 

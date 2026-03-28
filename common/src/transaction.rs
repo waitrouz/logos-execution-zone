@@ -1,7 +1,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use log::warn;
 use nssa::{AccountId, V03State};
-use nssa_core::program::Timestamp;
+use nssa_core::Timestamp;
 use serde::{Deserialize, Serialize};
 
 use crate::{HashType, block::BlockId};

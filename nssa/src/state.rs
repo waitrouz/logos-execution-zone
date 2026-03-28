@@ -2,9 +2,9 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use nssa_core::{
-    Commitment, CommitmentSetDigest, DUMMY_COMMITMENT, MembershipProof, Nullifier,
+    Commitment, CommitmentSetDigest, DUMMY_COMMITMENT, MembershipProof, Nullifier, Timestamp,
     account::{Account, AccountId, Nonce},
-    program::{BlockId, ProgramId, Timestamp},
+    program::{BlockId, ProgramId},
 };
 
 use crate::{
@@ -341,10 +341,10 @@ pub mod tests {
     use std::collections::HashMap;
 
     use nssa_core::{
-        Commitment, Nullifier, NullifierPublicKey, NullifierSecretKey, SharedSecretKey,
+        Commitment, Nullifier, NullifierPublicKey, NullifierSecretKey, SharedSecretKey, Timestamp,
         account::{Account, AccountId, AccountWithMetadata, Nonce, data::Data},
         encryption::{EphemeralPublicKey, Scalar, ViewingPublicKey},
-        program::{BlockId, BlockValidityWindow, PdaSeed, ProgramId, Timestamp, TimestampValidityWindow},
+        program::{BlockId, BlockValidityWindow, PdaSeed, ProgramId, TimestampValidityWindow},
     };
 
     use crate::{
