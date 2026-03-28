@@ -3,7 +3,7 @@ use nssa_core::{
     Commitment, CommitmentSetDigest, Nullifier, NullifierPublicKey, PrivacyPreservingCircuitOutput,
     account::{Account, Nonce},
     encryption::{Ciphertext, EphemeralPublicKey, ViewingPublicKey},
-    program::{BlockId, Timestamp, ValidityWindow},
+    program::{BlockValidityWindow, TimestampValidityWindow},
 };
 use sha2::{Digest as _, Sha256};
 
@@ -53,8 +53,8 @@ pub struct Message {
     pub encrypted_private_post_states: Vec<EncryptedAccountData>,
     pub new_commitments: Vec<Commitment>,
     pub new_nullifiers: Vec<(Nullifier, CommitmentSetDigest)>,
-    pub block_validity_window: ValidityWindow<BlockId>,
-    pub timestamp_validity_window: ValidityWindow<Timestamp>,
+    pub block_validity_window: BlockValidityWindow,
+    pub timestamp_validity_window: TimestampValidityWindow,
 }
 
 impl std::fmt::Debug for Message {
@@ -126,7 +126,7 @@ pub mod tests {
         Commitment, EncryptionScheme, Nullifier, NullifierPublicKey, SharedSecretKey,
         account::Account,
         encryption::{EphemeralPublicKey, ViewingPublicKey},
-        program::ValidityWindow,
+        program::{BlockValidityWindow, TimestampValidityWindow},
     };
     use sha2::{Digest as _, Sha256};
 
@@ -169,8 +169,8 @@ pub mod tests {
             encrypted_private_post_states,
             new_commitments,
             new_nullifiers,
-            block_validity_window: ValidityWindow::new_unbounded(),
-            timestamp_validity_window: ValidityWindow::new_unbounded(),
+            block_validity_window: BlockValidityWindow::new_unbounded(),
+            timestamp_validity_window: TimestampValidityWindow::new_unbounded(),
         }
     }
 

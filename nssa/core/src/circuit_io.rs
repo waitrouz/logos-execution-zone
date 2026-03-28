@@ -5,7 +5,7 @@ use crate::{
     NullifierSecretKey, SharedSecretKey,
     account::{Account, AccountWithMetadata},
     encryption::Ciphertext,
-    program::{BlockId, ProgramId, ProgramOutput, Timestamp, ValidityWindow},
+    program::{BlockValidityWindow, ProgramId, ProgramOutput, TimestampValidityWindow},
 };
 
 #[derive(Serialize, Deserialize)]
@@ -36,8 +36,8 @@ pub struct PrivacyPreservingCircuitOutput {
     pub ciphertexts: Vec<Ciphertext>,
     pub new_commitments: Vec<Commitment>,
     pub new_nullifiers: Vec<(Nullifier, CommitmentSetDigest)>,
-    pub block_validity_window: ValidityWindow<BlockId>,
-    pub timestamp_validity_window: ValidityWindow<Timestamp>,
+    pub block_validity_window: BlockValidityWindow,
+    pub timestamp_validity_window: TimestampValidityWindow,
 }
 
 #[cfg(feature = "host")]
@@ -104,7 +104,7 @@ mod tests {
                 [0xab; 32],
             )],
             block_validity_window: (Some(1u64), None).try_into().unwrap(),
-            timestamp_validity_window: ValidityWindow::new_unbounded(),
+            timestamp_validity_window: TimestampValidityWindow::new_unbounded(),
         };
         let bytes = output.to_bytes();
         let output_from_slice: PrivacyPreservingCircuitOutput = from_slice(&bytes).unwrap();

@@ -175,6 +175,9 @@ pub type BlockId = u64;
 /// Unix timestamp in milliseconds.
 pub type Timestamp = u64;
 
+pub type BlockValidityWindow = ValidityWindow<BlockId>;
+pub type TimestampValidityWindow = ValidityWindow<Timestamp>;
+
 #[derive(Clone, Copy, Serialize, Deserialize)]
 #[cfg_attr(
     any(feature = "host", test),
@@ -289,9 +292,9 @@ pub struct ProgramOutput {
     /// The list of chained calls to other programs.
     pub chained_calls: Vec<ChainedCall>,
     /// The block ID window where the program output is valid.
-    pub block_validity_window: ValidityWindow<BlockId>,
+    pub block_validity_window: BlockValidityWindow,
     /// The timestamp window where the program output is valid.
-    pub timestamp_validity_window: ValidityWindow<Timestamp>,
+    pub timestamp_validity_window: TimestampValidityWindow,
 }
 
 impl ProgramOutput {
@@ -320,14 +323,14 @@ impl ProgramOutput {
     }
 
     /// Sets the block ID validity window from an infallible range conversion (`1..`, `..5`, `..`).
-    pub fn with_block_validity_window<W: Into<ValidityWindow<BlockId>>>(mut self, window: W) -> Self {
+    pub fn with_block_validity_window<W: Into<BlockValidityWindow>>(mut self, window: W) -> Self {
         self.block_validity_window = window.into();
         self
     }
 
     /// Sets the block ID validity window from a fallible range conversion (`1..5`).
     /// Returns `Err` if the range is empty.
-    pub fn try_with_block_validity_window<W: TryInto<ValidityWindow<BlockId>, Error = InvalidWindow>>(
+    pub fn try_with_block_validity_window<W: TryInto<BlockValidityWindow, Error = InvalidWindow>>(
         mut self,
         window: W,
     ) -> Result<Self, InvalidWindow> {
@@ -336,14 +339,14 @@ impl ProgramOutput {
     }
 
     /// Sets the timestamp validity window from an infallible range conversion.
-    pub fn with_timestamp_validity_window<W: Into<ValidityWindow<Timestamp>>>(mut self, window: W) -> Self {
+    pub fn with_timestamp_validity_window<W: Into<TimestampValidityWindow>>(mut self, window: W) -> Self {
         self.timestamp_validity_window = window.into();
         self
     }
 
     /// Sets the timestamp validity window from a fallible range conversion.
     /// Returns `Err` if the range is empty.
-    pub fn try_with_timestamp_validity_window<W: TryInto<ValidityWindow<Timestamp>, Error = InvalidWindow>>(
+    pub fn try_with_timestamp_validity_window<W: TryInto<TimestampValidityWindow, Error = InvalidWindow>>(
         mut self,
         window: W,
     ) -> Result<Self, InvalidWindow> {

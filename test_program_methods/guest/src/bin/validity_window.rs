@@ -1,9 +1,9 @@
 use nssa_core::program::{
-    AccountPostState, BlockId, ProgramInput, ProgramOutput, Timestamp, ValidityWindow,
+    AccountPostState, BlockValidityWindow, ProgramInput, ProgramOutput, TimestampValidityWindow,
     read_nssa_inputs,
 };
 
-type Instruction = (ValidityWindow<BlockId>, ValidityWindow<Timestamp>);
+type Instruction = (BlockValidityWindow, TimestampValidityWindow);
 
 fn main() {
     let (

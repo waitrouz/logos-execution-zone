@@ -1,6 +1,6 @@
 use nssa_core::program::{
-    AccountPostState, BlockId, ChainedCall, ProgramId, ProgramInput, ProgramOutput, Timestamp,
-    ValidityWindow, read_nssa_inputs,
+    AccountPostState, BlockValidityWindow, ChainedCall, ProgramId, ProgramInput, ProgramOutput,
+    TimestampValidityWindow, read_nssa_inputs,
 };
 use risc0_zkvm::serde::to_vec;
 
@@ -9,9 +9,9 @@ use risc0_zkvm::serde::to_vec;
 ///
 /// Instruction: (`window`, `chained_program_id`, `chained_window`)
 /// The initial output uses `window` and chains to `chained_program_id` with `chained_window`.
-/// The chained program (validity_window) expects `(ValidityWindow<BlockId>, ValidityWindow<Timestamp>)`
+/// The chained program (validity_window) expects `(BlockValidityWindow, TimestampValidityWindow)`
 /// so an unbounded timestamp window is appended automatically.
-type Instruction = (ValidityWindow<BlockId>, ProgramId, ValidityWindow<BlockId>);
+type Instruction = (BlockValidityWindow, ProgramId, BlockValidityWindow);
 
 fn main() {
     let (
@@ -27,7 +27,7 @@ fn main() {
 
     let chained_instruction = to_vec(&(
         chained_block_validity_window,
-        ValidityWindow::<Timestamp>::new_unbounded(),
+        TimestampValidityWindow::new_unbounded(),
     ))
     .unwrap();
     let chained_call = ChainedCall {

@@ -10,8 +10,8 @@ use nssa_core::{
     account::{Account, AccountId, AccountWithMetadata, Nonce},
     compute_digest_for_path,
     program::{
-        AccountPostState, BlockId, ChainedCall, Claim, DEFAULT_PROGRAM_ID,
-        MAX_NUMBER_CHAINED_CALLS, ProgramId, ProgramOutput, Timestamp, ValidityWindow,
+        AccountPostState, BlockValidityWindow, ChainedCall, Claim, DEFAULT_PROGRAM_ID,
+        MAX_NUMBER_CHAINED_CALLS, ProgramId, ProgramOutput, TimestampValidityWindow,
         validate_execution,
     },
 };
@@ -21,8 +21,8 @@ use risc0_zkvm::{guest::env, serde::to_vec};
 struct ExecutionState {
     pre_states: Vec<AccountWithMetadata>,
     post_states: HashMap<AccountId, Account>,
-    block_validity_window: ValidityWindow<BlockId>,
-    timestamp_validity_window: ValidityWindow<Timestamp>,
+    block_validity_window: BlockValidityWindow,
+    timestamp_validity_window: TimestampValidityWindow,
 }
 
 impl ExecutionState {
@@ -49,12 +49,12 @@ impl ExecutionState {
             .filter_map(|output| output.timestamp_validity_window.end())
             .min();
 
-        let block_validity_window: ValidityWindow<BlockId> = (block_valid_from, block_valid_until)
+        let block_validity_window: BlockValidityWindow = (block_valid_from, block_valid_until)
             .try_into()
             .expect(
                 "There should be non empty intersection in the program output block validity windows",
             );
-        let timestamp_validity_window: ValidityWindow<Timestamp> =
+        let timestamp_validity_window: TimestampValidityWindow =
             (ts_valid_from, ts_valid_until)
                 .try_into()
                 .expect(

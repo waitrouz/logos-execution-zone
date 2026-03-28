@@ -7,7 +7,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use nssa_core::{
     Commitment, CommitmentSetDigest, Nullifier, PrivacyPreservingCircuitOutput,
     account::{Account, AccountWithMetadata},
-    program::{BlockId, Timestamp, ValidityWindow},
+    program::{BlockId, BlockValidityWindow, Timestamp, TimestampValidityWindow},
 };
 use sha2::{Digest as _, digest::FixedOutput as _};
 
@@ -185,8 +185,8 @@ fn check_privacy_preserving_circuit_proof_is_valid(
     encrypted_private_post_states: &[EncryptedAccountData],
     new_commitments: &[Commitment],
     new_nullifiers: &[(Nullifier, CommitmentSetDigest)],
-    block_validity_window: &ValidityWindow<BlockId>,
-    timestamp_validity_window: &ValidityWindow<Timestamp>,
+    block_validity_window: &BlockValidityWindow,
+    timestamp_validity_window: &TimestampValidityWindow,
 ) -> Result<(), NssaError> {
     let output = PrivacyPreservingCircuitOutput {
         public_pre_states: public_pre_states.to_vec(),
