@@ -3,9 +3,10 @@ use std::{path::Path, sync::Arc};
 use anyhow::Result;
 use bedrock_client::HeaderId;
 use common::{
-    block::{BedrockStatus, Block, BlockId},
+    block::{BedrockStatus, Block},
     transaction::NSSATransaction,
 };
+use nssa_core::BlockId;
 use nssa::{Account, AccountId, V03State};
 use storage::indexer::RocksDBIO;
 use tokio::sync::RwLock;

@@ -2,13 +2,12 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest as _, Sha256, digest::FixedOutput as _};
 
-use nssa_core::Timestamp;
+use nssa_core::{BlockId, Timestamp};
 
 use crate::{HashType, transaction::NSSATransaction};
 
 pub type MantleMsgId = [u8; 32];
 pub type BlockHash = HashType;
-pub type BlockId = u64;
 
 #[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct BlockMeta {

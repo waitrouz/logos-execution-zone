@@ -3,6 +3,7 @@
     reason = "We prefer to group methods by functionality rather than by type for encoding"
 )]
 
+pub type BlockId = u64;
 /// Unix timestamp in milliseconds.
 pub type Timestamp = u64;
 

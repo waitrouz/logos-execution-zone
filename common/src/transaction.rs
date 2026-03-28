@@ -1,10 +1,10 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use log::warn;
 use nssa::{AccountId, V03State};
-use nssa_core::Timestamp;
+use nssa_core::{BlockId, Timestamp};
 use serde::{Deserialize, Serialize};
 
-use crate::{HashType, block::BlockId};
+use crate::HashType;
 
 #[derive(Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
 pub enum NSSATransaction {

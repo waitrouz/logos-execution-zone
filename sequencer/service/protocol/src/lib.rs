@@ -2,8 +2,8 @@
 
 pub use common::{
     HashType,
-    block::{Block, BlockId},
+    block::Block,
     transaction::NSSATransaction,
 };
 pub use nssa::{Account, AccountId, ProgramId};
-pub use nssa_core::{Commitment, MembershipProof, account::Nonce};
+pub use nssa_core::{BlockId, Commitment, MembershipProof, account::Nonce};
