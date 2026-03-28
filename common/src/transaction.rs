@@ -70,14 +70,14 @@ impl NSSATransaction {
         self,
         state: &mut V03State,
         block_id: BlockId,
-        timestamp_ms: Timestamp,
+        timestamp: Timestamp,
     ) -> Result<Self, nssa::error::NssaError> {
         match &self {
             Self::Public(tx) => {
-                state.transition_from_public_transaction(tx, block_id, timestamp_ms)
+                state.transition_from_public_transaction(tx, block_id, timestamp)
             }
             Self::PrivacyPreserving(tx) => {
-                state.transition_from_privacy_preserving_transaction(tx, block_id, timestamp_ms)
+                state.transition_from_privacy_preserving_transaction(tx, block_id, timestamp)
             }
             Self::ProgramDeployment(tx) => state.transition_from_program_deployment_transaction(tx),
         }

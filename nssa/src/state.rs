@@ -159,9 +159,9 @@ impl V03State {
         &mut self,
         tx: &PublicTransaction,
         block_id: BlockId,
-        timestamp_ms: Timestamp,
+        timestamp: Timestamp,
     ) -> Result<(), NssaError> {
-        let state_diff = tx.validate_and_produce_public_state_diff(self, block_id, timestamp_ms)?;
+        let state_diff = tx.validate_and_produce_public_state_diff(self, block_id, timestamp)?;
 
         #[expect(
             clippy::iter_over_hash_type,
@@ -185,11 +185,11 @@ impl V03State {
         &mut self,
         tx: &PrivacyPreservingTransaction,
         block_id: BlockId,
-        timestamp_ms: Timestamp,
+        timestamp: Timestamp,
     ) -> Result<(), NssaError> {
         // 1. Verify the transaction satisfies acceptance criteria
         let public_state_diff =
-            tx.validate_and_produce_public_state_diff(self, block_id, timestamp_ms)?;
+            tx.validate_and_produce_public_state_diff(self, block_id, timestamp)?;
 
         let message = tx.message();
 
@@ -3272,7 +3272,7 @@ pub mod tests {
     #[test_case::test_case((None, None), 100; "no bounds - always valid 2")]
     fn timestamp_validity_window_works_in_public_transactions(
         validity_window: (Option<Timestamp>, Option<Timestamp>),
-        timestamp_ms: Timestamp,
+        timestamp: Timestamp,
     ) {
         let timestamp_validity_window: TimestampValidityWindow =
             validity_window.try_into().unwrap();
@@ -3292,12 +3292,12 @@ pub mod tests {
             let witness_set = public_transaction::WitnessSet::for_message(&message, &[]);
             PublicTransaction::new(message, witness_set)
         };
-        let result = state.transition_from_public_transaction(&tx, 1, timestamp_ms);
+        let result = state.transition_from_public_transaction(&tx, 1, timestamp);
         let is_inside_validity_window =
             match (timestamp_validity_window.start(), timestamp_validity_window.end()) {
-                (Some(s), Some(e)) => s <= timestamp_ms && timestamp_ms < e,
-                (Some(s), None) => s <= timestamp_ms,
-                (None, Some(e)) => timestamp_ms < e,
+                (Some(s), Some(e)) => s <= timestamp && timestamp < e,
+                (Some(s), None) => s <= timestamp,
+                (None, Some(e)) => timestamp < e,
                 (None, None) => true,
             };
         if is_inside_validity_window {
@@ -3387,7 +3387,7 @@ pub mod tests {
     #[test_case::test_case((None, None), 100; "no bounds - always valid 2")]
     fn timestamp_validity_window_works_in_privacy_preserving_transactions(
         validity_window: (Option<Timestamp>, Option<Timestamp>),
-        timestamp_ms: Timestamp,
+        timestamp: Timestamp,
     ) {
         let timestamp_validity_window: TimestampValidityWindow =
             validity_window.try_into().unwrap();
@@ -3424,12 +3424,12 @@ pub mod tests {
             let witness_set = WitnessSet::for_message(&message, proof, &[]);
             PrivacyPreservingTransaction::new(message, witness_set)
         };
-        let result = state.transition_from_privacy_preserving_transaction(&tx, 1, timestamp_ms);
+        let result = state.transition_from_privacy_preserving_transaction(&tx, 1, timestamp);
         let is_inside_validity_window =
             match (timestamp_validity_window.start(), timestamp_validity_window.end()) {
-                (Some(s), Some(e)) => s <= timestamp_ms && timestamp_ms < e,
-                (Some(s), None) => s <= timestamp_ms,
-                (None, Some(e)) => timestamp_ms < e,
+                (Some(s), Some(e)) => s <= timestamp && timestamp < e,
+                (Some(s), None) => s <= timestamp,
+                (None, Some(e)) => timestamp < e,
                 (None, None) => true,
             };
         if is_inside_validity_window {

@@ -72,7 +72,7 @@ impl PublicTransaction {
         &self,
         state: &V03State,
         block_id: BlockId,
-        timestamp_ms: Timestamp,
+        timestamp: Timestamp,
     ) -> Result<HashMap<AccountId, Account>, NssaError> {
         let message = self.message();
         let witness_set = self.witness_set();
@@ -198,7 +198,7 @@ impl PublicTransaction {
             // Verify validity window
             ensure!(
                 program_output.block_validity_window.is_valid_for(block_id)
-                    && program_output.timestamp_validity_window.is_valid_for(timestamp_ms),
+                    && program_output.timestamp_validity_window.is_valid_for(timestamp),
                 NssaError::OutOfValidityWindow
             );
 

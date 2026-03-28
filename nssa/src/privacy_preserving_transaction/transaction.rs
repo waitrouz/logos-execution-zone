@@ -37,7 +37,7 @@ impl PrivacyPreservingTransaction {
         &self,
         state: &V03State,
         block_id: BlockId,
-        timestamp_ms: Timestamp,
+        timestamp: Timestamp,
     ) -> Result<HashMap<AccountId, Account>, NssaError> {
         let message = &self.message;
         let witness_set = &self.witness_set;
@@ -96,7 +96,7 @@ impl PrivacyPreservingTransaction {
 
         // Verify validity window
         if !message.block_validity_window.is_valid_for(block_id)
-            || !message.timestamp_validity_window.is_valid_for(timestamp_ms)
+            || !message.timestamp_validity_window.is_valid_for(timestamp)
         {
             return Err(NssaError::OutOfValidityWindow);
         }
