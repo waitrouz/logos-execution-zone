@@ -1,4 +1,4 @@
-use std::num::NonZero;
+use std::{num::NonZero, vec};
 
 use amm_core::{
     PoolDefinition, compute_liquidity_token_pda, compute_liquidity_token_pda_seed,
@@ -1756,7 +1756,7 @@ impl AccountsForExeTests {
                 definition_id: IdForExeTests::token_lp_definition_id(),
                 balance: BalanceForExeTests::lp_supply_init(),
             }),
-            nonce: 0_u128.into(),
+            nonce: 1_u128.into(),
         }
     }
 
@@ -1801,7 +1801,7 @@ impl AccountsForExeTests {
                 definition_id: IdForExeTests::token_lp_definition_id(),
                 balance: 0,
             }),
-            nonce: 0_u128.into(),
+            nonce: 1.into(),
         }
     }
 }
@@ -2799,7 +2799,7 @@ fn simple_amm_new_definition_inactive_initialized_pool_and_uninit_user_lp() {
             IdForExeTests::user_token_b_id(),
             IdForExeTests::user_token_lp_id(),
         ],
-        vec![0_u128.into(), 0_u128.into()],
+        vec![0_u128.into(), 0_u128.into(), 0_u128.into()],
         instruction,
     )
     .unwrap();
@@ -2809,6 +2809,7 @@ fn simple_amm_new_definition_inactive_initialized_pool_and_uninit_user_lp() {
         &[
             &PrivateKeysForTests::user_token_a_key(),
             &PrivateKeysForTests::user_token_b_key(),
+            &PrivateKeysForTests::user_token_lp_key(),
         ],
     );
 
@@ -2955,7 +2956,7 @@ fn simple_amm_new_definition_uninitialized_pool() {
             IdForExeTests::user_token_b_id(),
             IdForExeTests::user_token_lp_id(),
         ],
-        vec![0_u128.into(), 0_u128.into()],
+        vec![0_u128.into(), 0_u128.into(), 0_u128.into()],
         instruction,
     )
     .unwrap();
@@ -2965,6 +2966,7 @@ fn simple_amm_new_definition_uninitialized_pool() {
         &[
             &PrivateKeysForTests::user_token_a_key(),
             &PrivateKeysForTests::user_token_b_key(),
+            &PrivateKeysForTests::user_token_lp_key(),
         ],
     );
 

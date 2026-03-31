@@ -22,7 +22,7 @@ pub struct ProgramInput<T> {
 /// Each program can derive up to `2^256` unique account IDs by choosing different
 /// seeds. PDAs allow programs to control namespaced account identifiers without
 /// collisions between programs.
-#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub struct PdaSeed([u8; 32]);
 
 impl PdaSeed {
@@ -91,11 +91,26 @@ impl ChainedCall {
 /// A post state may optionally request that the executing program
 /// becomes the owner of the account (a “claim”). This is used to signal
 /// that the program intends to take ownership of the account.
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(any(feature = "host", test), derive(PartialEq, Eq))]
 pub struct AccountPostState {
     account: Account,
-    claim: bool,
+    claim: Option<Claim>,
+}
+
+/// A claim request for an account, indicating that the executing program intends to take ownership
+/// of the account.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Claim {
+    /// The program requests ownership of the account which was authorized by the signer.
+    ///
+    /// Note that it's possible to successfully execute program outputting [`AccountPostState`] with
+    /// `is_authorized == false` and `claim == Some(Claim::Authorized)`.
+    /// This will give no error if program had authorization in pre state and may be useful
+    /// if program decides to give up authorization for a chained call.
+    Authorized,
+    /// The program requests ownership of the account through a PDA.
+    Pda(PdaSeed),
 }
 
 impl AccountPostState {
@@ -105,7 +120,7 @@ impl AccountPostState {
     pub const fn new(account: Account) -> Self {
         Self {
             account,
-            claim: false,
+            claim: None,
         }
     }
 
@@ -113,25 +128,27 @@ impl AccountPostState {
     /// This indicates that the executing program intends to claim the
     /// account as its own and is allowed to mutate it.
     #[must_use]
-    pub const fn new_claimed(account: Account) -> Self {
+    pub const fn new_claimed(account: Account, claim: Claim) -> Self {
         Self {
             account,
-            claim: true,
+            claim: Some(claim),
         }
     }
 
     /// Creates a post state that requests ownership of the account
     /// if the account's program owner is the default program ID.
     #[must_use]
-    pub fn new_claimed_if_default(account: Account) -> Self {
-        let claim = account.program_owner == DEFAULT_PROGRAM_ID;
-        Self { account, claim }
+    pub fn new_claimed_if_default(account: Account, claim: Claim) -> Self {
+        let is_default_owner = account.program_owner == DEFAULT_PROGRAM_ID;
+        Self {
+            account,
+            claim: is_default_owner.then_some(claim),
+        }
     }
 
-    /// Returns `true` if this post state requests that the account
-    /// be claimed (owned) by the executing program.
+    /// Returns whether this post state requires a claim.
     #[must_use]
-    pub const fn requires_claim(&self) -> bool {
+    pub const fn required_claim(&self) -> Option<Claim> {
         self.claim
     }
 
@@ -142,6 +159,7 @@ impl AccountPostState {
     }
 
     /// Returns the underlying account.
+    #[must_use]
     pub const fn account_mut(&mut self) -> &mut Account {
         &mut self.account
     }
@@ -598,10 +616,10 @@ mod tests {
             nonce: 10_u128.into(),
         };
 
-        let account_post_state = AccountPostState::new_claimed(account.clone());
+        let account_post_state = AccountPostState::new_claimed(account.clone(), Claim::Authorized);
 
         assert_eq!(account, account_post_state.account);
-        assert!(account_post_state.requires_claim());
+        assert_eq!(account_post_state.required_claim(), Some(Claim::Authorized));
     }
 
     #[test]
@@ -616,7 +634,7 @@ mod tests {
         let account_post_state = AccountPostState::new(account.clone());
 
         assert_eq!(account, account_post_state.account);
-        assert!(!account_post_state.requires_claim());
+        assert!(account_post_state.required_claim().is_none());
     }
 
     #[test]
