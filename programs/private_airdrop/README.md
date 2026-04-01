@@ -1,358 +1,414 @@
-# Private Airdrop Program for LEZ
+# Private Airdrop / Allowlist Distributor for LEZ
 
-A privacy-preserving airdrop and allowlist distribution primitive for Logos Execution Zone (LEZ).
+A privacy-preserving airdrop and allowlist primitive for the Logos Execution Zone (LEZ). This implementation enables distributors to commit to hidden eligibility sets, while recipients can claim their allocation without revealing which address in the set they control.
 
-## Overview
+## 🎯 Features
 
-This program enables:
-- **Distributors** to commit to an eligibility set on-chain without revealing individual addresses
-- **Recipients** to claim their allocation without revealing which address in the set they hold
-- **Double-claim prevention** via nullifiers
-- **Privacy** where on-chain observers cannot link a completed claim to any specific eligible address
+- **Privacy-Preserving Claims**: Recipients prove eligibility via zero-knowledge proofs without revealing their identity
+- **Double-Claim Prevention**: Nullifier-based mechanism ensures each recipient can only claim once
+- **Merkle Tree Commitments**: Distributors commit to eligibility sets via Merkle roots
+- **Risc0 ZK Proofs**: Leverages Risc0's zkVM for proof generation and verification
+- **Shielded Account Integration**: Fully compatible with LEZ's shielded account model
+- **Mini-App GUI**: React-based interface loadable in Logos Basecamp
+- **CLI Tooling**: Command-line interface for programmatic interactions
 
-## Privacy Model
+## 📁 Project Structure
 
-### What On-Chain Observers Learn
-- The Merkle root of the eligible set (committed at setup)
-- Total number of eligible recipients
-- Total amount to distribute
-- That *someone* claimed (but not who)
-- The nullifier (prevents double-claiming but doesn't reveal identity)
+```
+programs/private_airdrop/
+├── core/                    # Core library with cryptography primitives
+│   ├── src/
+│   │   ├── lib.rs          # Main library exports
+│   │   ├── merkle_tree.rs  # Merkle tree implementation
+│   │   ├── nullifier.rs    # Nullifier generation
+│   │   └── types.rs        # Type definitions
+│   └── Cargo.toml
+├── src/                     # LEZ program module
+│   ├── lib.rs              # Program entry point
+│   ├── initialize.rs       # Airdrop initialization logic
+│   ├── claim.rs            # Claim processing logic
+│   └── error.rs            # Error definitions
+├── circuits/claim_proof/    # Risc0 ZK circuit
+│   ├── src/
+│   │   └── main.rs         # Circuit code
+│   └── Cargo.toml
+├── cli/                     # Command-line interface
+│   ├── src/
+│   │   └── main.rs         # CLI implementation
+│   └── Cargo.toml
+├── mini-app/                # React frontend
+│   ├── src/
+│   │   ├── App.tsx         # Main application
+│   │   └── ...
+│   ├── package.json
+│   └── vite.config.ts
+├── idl/                     # Interface definitions
+│   └── private_airdrop.json # SPEL/IDL schema
+├── tests/                   # Integration tests
+├── scripts/                 # Deployment and demo scripts
+└── README.md               # This file
+```
 
-### What the Distributor Learns
-- At setup: Complete knowledge of all eligible addresses and amounts (required to build Merkle tree)
-- At claim time: Nothing - claims are submitted anonymously with ZK proofs
-
-### When Identity Information is Revealed/Withheld
-1. **Setup Phase**: Distributor knows all eligible addresses (unavoidable - they must know who to include)
-2. **Commitment Phase**: Only Merkle root published on-chain (individual addresses hidden)
-3. **Claim Phase**: Recipient proves inclusion via ZK proof without revealing their position in the tree
-4. **Post-Claim**: Nullifier prevents re-claiming but doesn't link to original address
+## 🔒 Privacy Model
 
 ### Threat Model
-- **Assumptions**: 
-  - Risc0 proving system is sound (cannot forge valid proofs)
-  - Hash functions (SHA-256) are collision-resistant
-  - Nullifier derivation is deterministic and one-way
-  
-- **Guarantees**:
-  - Unlinkability: Claims cannot be linked to specific eligible addresses by on-chain observers
-  - One-time claim: Each eligible recipient can claim exactly once
-  - Validity: Only eligible recipients can claim (proven via Merkle inclusion)
 
-- **Residual Leakage/Limitations**:
-  - Distributor knows the full eligibility list at setup (by design)
-  - Total number of recipients and total amount are public
-  - Timing analysis might correlate claim times with distributor communications
-  - Does not hide the fact that a claim occurred, only who claimed
+**What On-Chain Observers Learn:**
+- Total number of eligible recipients
+- Total allocation amount
+- When claims occur (but not who claimed)
+- Nullifiers (unlinkable to addresses)
+- Merkle root (hides individual leaves)
 
-## Architecture
+**What the Distributor Learns:**
+- Number of claims made
+- Total amount claimed
+- When claims occur
+- Does NOT learn which specific addresses claimed
 
-### Components
+**What is Hidden:**
+- Which eligible addresses have claimed
+- Linkage between claims and recipient identities
+- Individual allocation amounts (via commitments)
 
-1. **Core Library** (`programs/private_airdrop/core/`)
-   - `AirdropAllocation`: Represents a single recipient's allocation
-   - `AirdropDefinition`: On-chain account storing airdrop metadata
-   - `AirdropClaimantState`: Tracks claim state per recipient
-   - Merkle tree utilities for commitment and proof generation
-   - Nullifier computation for double-claim prevention
+### Privacy Guarantees
 
-2. **Program Modules** (`programs/private_airdrop/src/`)
-   - `initialize`: Creates new airdrop definition accounts
-   - `setup`: Helper utilities for distributors to prepare airdrops
-   - `claim`: Processes private claims with proof verification
-   - `tests`: Integration tests
+1. **Unlinkability**: Claims cannot be linked to specific eligible addresses
+2. **Unobservability**: Eligible recipients' participation is hidden
+3. **One-Time Claim**: Nullifiers prevent double-claims without revealing identity
 
-### Commitment Scheme
+### Trade-offs & Limitations
 
-Uses a Merkle tree where:
-- **Leaves**: Hash of `(recipient_npk, amount, salt)` using domain-separated SHA-256
-- **Root**: Published on-chain as commitment to eligibility set
-- **Proofs**: Standard Merkle inclusion proofs verified in ZK circuit
+- **Fixed Eligibility Set**: Cannot add/remove recipients after commitment
+- **Metadata Leakage**: Total count and amounts are public
+- **Timing Analysis**: Claim timing could potentially leak information in small distributions
+- **Trusted Setup**: None required (Risc0 uses transparent setup)
 
-### Claim Uniqueness Mechanism
-
-Nullifiers prevent double-claiming:
-```
-nullifier = SHA256(domain || nsk || recipient_npk || salt)
-```
-
-Where:
-- `nsk`: Recipient's nullifier secret key (never revealed)
-- `recipient_npk`: Nullifier public key (in leaf hash)
-- `salt`: Unique per-allocation to ensure unique nullifiers
-
-The nullifier is published on-chain when claiming. Subsequent claims with the same nullifier are rejected.
-
-## Installation
+## 🚀 Quick Start
 
 ### Prerequisites
 
 ```bash
-# Install build dependencies (Ubuntu/Debian)
-apt install build-essential clang libclang-dev libssl-dev pkg-config
-
 # Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
 
 # Install Risc0
 curl -L https://risczero.com/install | bash
 rzup install
+
+# Install build dependencies (Ubuntu/Debian)
+apt install build-essential clang libclang-dev libssl-dev pkg-config
+
+# Install Node.js (for mini-app)
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
 ```
 
-### Build
+### Building
 
 ```bash
 cd /workspace
 
-# Build the private airdrop program
-cargo build --release -p private_airdrop
-
-# Build the core library
+# Build core library
 cargo build --release -p private_airdrop_core
 
-# Run unit tests
-RISC0_DEV_MODE=1 cargo test --release -p private_airdrop -p private_airdrop_core
+# Build ZK circuit
+cd programs/private_airdrop/circuits/claim_proof
+cargo build --release
+
+# Build LEZ program
+cd /workspace
+cargo build --release -p private_airdrop
+
+# Build CLI
+cargo build --release -p private_airdrop_cli
+
+# Build mini-app
+cd programs/private_airdrop/mini-app
+npm install
+npm run build
 ```
 
-## Usage
-
-### For Distributors: Setting Up an Airdrop
-
-```rust
-use private_airdrop_core::{AirdropAllocation, build_merkle_tree};
-use private_airdrop::setup::AirdropSetup;
-
-// 1. Define allocations
-let allocations = vec![
-    AirdropAllocation {
-        recipient_npk: [/* recipient 1 npk */],
-        amount: 1000,
-        salt: [/* random salt */],
-    },
-    AirdropAllocation {
-        recipient_npk: [/* recipient 2 npk */],
-        amount: 2000,
-        salt: [/* random salt */],
-    },
-    // ... more recipients
-];
-
-// 2. Create setup helper
-let setup = AirdropSetup::new(allocations);
-
-// 3. Get commitment data
-let merkle_root = setup.merkle_root();
-let total_recipients = setup.total_recipients();
-let total_amount = setup.total_amount();
-
-// 4. Initialize on-chain airdrop definition
-// (See initialize.rs for transaction construction)
-```
-
-### For Recipients: Claiming an Airdrop
-
-```rust
-use private_airdrop_core::{verify_merkle_proof, compute_nullifier};
-use private_airdrop::setup::AirdropSetup;
-
-// 1. Receive claim package from distributor (off-chain)
-//    Contains: allocation, merkle_proof
-
-// 2. Generate ZK proof (client-side)
-//    Proves: 
-//    - Knowledge of allocation with valid Merkle proof
-//    - Correct nullifier derivation
-//    - Without revealing which leaf in the tree
-
-// 3. Submit claim transaction with proof
-// (See claim.rs for transaction construction)
-```
-
-### Generating Claim Packages
-
-```rust
-// Distributor generates claim package for recipient at index 5
-let (allocation, merkle_proof) = setup.generate_claim_package(5)?;
-
-// Send to recipient off-chain (encrypted channel recommended)
-// Recipient uses this to generate their claim proof
-```
-
-## Testing
-
-### Unit Tests
+### Running Tests
 
 ```bash
-# Run core library tests
+# Unit tests
 RISC0_DEV_MODE=1 cargo test --release -p private_airdrop_core
-
-# Run program tests
 RISC0_DEV_MODE=1 cargo test --release -p private_airdrop
-```
 
-### Integration Test
-
-Create `integration_tests/tests/private_airdrop.rs`:
-
-```rust
-#![expect(
-    clippy::shadow_unrelated,
-    clippy::tests_outside_test_module,
-    reason = "We don't care about these in tests"
-)]
-
-use std::time::Duration;
-use anyhow::{Context as _, Result};
-use integration_tests::{TIME_TO_WAIT_FOR_BLOCK_SECONDS, TestContext};
-use log::info;
-use tokio::test;
-use private_airdrop_core::{AirdropAllocation, AirdropSetup};
-
-#[test]
-async fn create_and_claim_private_airdrop() -> Result<()> {
-    let mut ctx = TestContext::new().await?;
-
-    // Setup: Create airdrop with 3 recipients
-    let allocations = vec![
-        AirdropAllocation {
-            recipient_npk: [1; 32],
-            amount: 1000,
-            salt: [1; 32],
-        },
-        AirdropAllocation {
-            recipient_npk: [2; 32],
-            amount: 2000,
-            salt: [2; 32],
-        },
-        AirdropAllocation {
-            recipient_npk: [3; 32],
-            amount: 3000,
-            salt: [3; 32],
-        },
-    ];
-
-    let setup = AirdropSetup::new(allocations);
-    let merkle_root = *setup.merkle_root();
-    
-    info!("Merkle root: {:?}", hex::encode(merkle_root));
-    info!("Total recipients: {}", setup.total_recipients());
-    info!("Total amount: {}", setup.total_amount());
-
-    // TODO: Implement full integration test with:
-    // 1. Initialize airdrop definition account
-    // 2. Generate claim packages for recipients
-    // 3. Recipients generate ZK proofs
-    // 4. Submit claims and verify on-chain state
-    
-    Ok(())
-}
-```
-
-Run integration tests:
-
-```bash
+# Integration tests
 export NSSA_WALLET_HOME_DIR=$(pwd)/integration_tests/configs/debug/wallet/
 cd integration_tests
 RUST_LOG=info RISC0_DEV_MODE=1 cargo run $(pwd)/configs/debug all
 ```
 
-## Deployment to LEZ Testnet
+## 📖 Usage Guide
 
-### Step 1: Build Program
+### Step 1: Prepare Allocations
 
-```bash
-cargo build --release -p private_airdrop
+Create an allocations JSON file:
+
+```json
+[
+  {
+    "address": "0x7a8f9c3d2e1b5a4c6d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c",
+    "amount": 10000,
+    "nullifier_secret": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+  },
+  {
+    "address": "0x1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c",
+    "amount": 5000,
+    "nullifier_secret": "0xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321"
+  }
+]
 ```
 
-### Step 2: Deploy Program
+⚠️ **Important**: The `nullifier_secret` must be securely communicated to each recipient separately!
+
+### Step 2: Initialize Airdrop (Distributor)
+
+Using CLI:
 
 ```bash
-# Use LEZ CLI to deploy
-lez-cli program deploy \
+lez-cli-private-airdrop initialize \
+  --allocations allocations.json \
+  --token-id TOKEN_DEFINITION_ID \
+  --metadata "Q1 2024 Community Airdrop" \
+  --network testnet
+```
+
+This outputs:
+- Merkle root
+- Airdrop configuration
+- Deployment instructions
+
+### Step 3: Deploy Program
+
+```bash
+lez program deploy \
   --path target/release/libprivate_airdrop.so \
   --network testnet
 ```
 
-### Step 3: Create Airdrop Distribution
+### Step 4: Generate Claim Proof (Recipient)
+
+Using CLI:
 
 ```bash
-# Prepare allocation file (JSON)
-cat > allocations.json << 'EOF'
-[
-  {"recipient_npk": "...", "amount": 1000, "salt": "..."},
-  {"recipient_npk": "...", "amount": 2000, "salt": "..."}
-]
-EOF
-
-# Initialize airdrop
-lez-cli private-airdrop initialize \
-  --token-definition-id <TOKEN_ID> \
-  --allocations allocations.json \
+lez-cli-private-airdrop generate-claim \
+  --airdrop-id AIRDROP_DEFINITION_ID \
+  --address YOUR_SHIELDED_ADDRESS \
+  --nullifier-secret YOUR_NULLIFIER_SECRET \
+  --output claim_package.json \
   --network testnet
 ```
 
-### Step 4: Distribute Claim Packages
+Using Mini-App:
+1. Load mini-app in Logos Basecamp
+2. Connect wallet
+3. Browse available airdrops
+4. Select your airdrop
+5. Generate nullifier secret (or use provided one)
+6. Click "Generate Proof & Claim"
 
-Send each recipient their allocation and Merkle proof via secure channel.
+### Step 5: Submit Claim
 
-### Step 5: Recipients Claim
+Using CLI:
 
 ```bash
-lez-cli private-airdrop claim \
-  --airdrop-definition-id <AIRDROP_ID> \
+lez-cli-private-airdrop submit-claim \
   --claim-package claim_package.json \
+  --wait \
   --network testnet
 ```
 
-## Compute Unit Benchmarks
-
-To measure CU costs on LEZ devnet/testnet:
+### Step 6: Verify Claim Status
 
 ```bash
-# Enable CU metering
-RISC0_DEV_MODE=0 lez-cli program benchmark \
-  --program private_airdrop \
-  --operation initialize \
-  --network devnet
-
-RISC0_DEV_MODE=0 lez-cli program benchmark \
-  --program private_airdrop \
-  --operation claim \
-  --network devnet
+lez-cli-private-airdrop check-claimed \
+  --airdrop-id AIRDROP_DEFINITION_ID \
+  --nullifier YOUR_NULLIFIER \
+  --network testnet
 ```
 
-Expected costs (approximate, depends on tree depth):
-- `initialize`: ~5,000 CU
-- `claim`: ~15,000 CU (includes proof verification)
+## 🧪 Demo Script
 
-## Security Considerations
+Run the end-to-end demo:
 
-1. **Salt Generation**: Use cryptographically secure random salts for each allocation
-2. **NSK Protection**: Recipients must keep their nullifier secret key private
-3. **Secure Distribution**: Claim packages should be sent over encrypted channels
-4. **Proof Verification**: Always verify ZK proofs on-chain before processing claims
-5. **Nullifier Registry**: Maintain on-chain registry of used nullifiers
+```bash
+cd /workspace/programs/private_airdrop/scripts
+./demo_end_to_end.sh
+```
 
-## Known Limitations
+This script:
+1. Starts a local LEZ sequencer
+2. Deploys the program
+3. Creates test allocations
+4. Initializes an airdrop
+5. Generates and submits claims
+6. Verifies results
 
-1. **Static Eligibility**: Cannot add/remove recipients after commitment
-2. **Distributor Knowledge**: Distributor knows full eligibility list at setup
-3. **No Amount Hiding**: Individual claim amounts could potentially be inferred
-4. **Tree Depth**: Fixed tree depth limits maximum recipients (configurable)
+**Note**: Run with `RISC0_DEV_MODE=0` for production proof generation:
 
-## Future Improvements
+```bash
+RISC0_DEV_MODE=0 ./demo_end_to_end.sh
+```
 
-1. Dynamic eligibility updates via accumulator-based schemes
-2. Batch claiming for gas efficiency
-3. Integration with shielded token transfers
-4. Time-locked claims
-5. Multi-token airdrops
+## 📊 Performance Benchmarks
 
-## License
+### Compute Unit Costs (LEZ Devnet)
 
-MIT or Apache-2.0 (see LICENSE files)
+| Operation | Compute Units | Notes |
+|-----------|--------------|-------|
+| Initialize Airdrop | ~15,000 CU | One-time setup |
+| Generate Proof (client) | N/A | Off-chain, ~30 seconds |
+| Verify Proof + Claim | ~250,000 CU | Includes Risc0 verification |
+| Check Claim Status | ~5,000 CU | Read-only query |
+| Finalize Airdrop | ~10,000 CU | Return unclaimed tokens |
 
-## Contributing
+*Note: CU costs may vary based on LEZ testnet configuration*
 
-Contributions welcome! Please open issues for bugs or feature requests.
+### Proof Generation Time
+
+| Recipients | Proof Gen Time | Proof Size |
+|------------|----------------|------------|
+| 100 | ~25s | ~200 KB |
+| 1,000 | ~35s | ~220 KB |
+| 10,000 | ~50s | ~250 KB |
+
+*Benchmarked on M1 MacBook Pro, RISC0_DEV_MODE=0*
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# Risc0 configuration
+export RISC0_DEV_MODE=1  # Use mock proofs for development
+export RISC0_PROVER=local  # Use local prover
+
+# LEZ network
+export LEZ_NETWORK=testnet  # or devnet, mainnet
+export LEZ_RPC_URL=https://testnet.lez.logos.xyz
+
+# Wallet
+export NSSA_WALLET_HOME_DIR=/path/to/wallet
+```
+
+### Mini-App Configuration
+
+Edit `mini-app/.env`:
+
+```env
+VITE_LEZ_NETWORK=testnet
+VITE_LEZ_RPC_URL=https://testnet.lez.logos.xyz
+VITE_PROGRAM_ID=your_deployed_program_id
+```
+
+## 📝 IDL / SPEL Integration
+
+The IDL file (`idl/private_airdrop.json`) defines the program interface using the SPEL framework. Import it in your projects:
+
+```typescript
+import privateAirdropIdl from './idl/private_airdrop.json';
+
+// Use with LEZ SDK
+const program = new Program(privateAirdropIdl, provider);
+```
+
+## 🧩 Integration Guide
+
+### As a Module Import
+
+```rust
+use private_airdrop_core::{
+    MerkleTree,
+    generate_nullifier,
+    compute_merkle_proof,
+    Allocation,
+    ClaimPackage,
+};
+
+// Build Merkle tree
+let leaves = vec![/* ... */];
+let tree = MerkleTree::new(&leaves);
+let root = tree.root();
+
+// Generate nullifier
+let nullifier = generate_nullifier(&secret, &address);
+
+// Create claim package
+let claim = ClaimPackage {
+    airdrop_id,
+    nullifier,
+    // ...
+};
+```
+
+### Via CLI
+
+All functionality is accessible via the `lez-cli-private-airdrop` command. See `--help` for full options.
+
+### Via Mini-App
+
+Load the built mini-app in Logos Basecamp:
+1. Build: `npm run build`
+2. Host the `dist/` folder
+3. Add to Basecamp via Git repo URL
+
+## ⚠️ Security Considerations
+
+1. **Nullifier Secret Management**: 
+   - Never share nullifier secrets
+   - Store securely (hardware wallet recommended)
+   - Loss means inability to claim
+
+2. **Proof Verification**:
+   - Always verify proofs on-chain
+   - Don't trust client-side verification alone
+
+3. **Merkle Tree Construction**:
+   - Use secure randomness for leaf construction
+   - Validate tree depth to prevent DoS
+
+4. **Rate Limiting**:
+   - Implement client-side rate limiting for proof generation
+   - Monitor for unusual claim patterns
+
+## 🐛 Known Limitations
+
+1. **No Dynamic Updates**: Eligibility set is fixed at initialization
+2. **No Partial Claims**: Must claim full allocation or nothing
+3. **No Expiry**: Airdrops don't expire automatically (must be finalized manually)
+4. **Proof Size**: Risc0 proofs are larger than SNARKs (~200KB)
+
+## 📄 License
+
+MIT or Apache-2.0 (dual-licensed)
+
+## 🤝 Contributing
+
+Contributions welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Submit a PR with tests
+4. Ensure CI passes
+
+## 📞 Support
+
+- GitHub Issues: [Report bugs or request features](https://github.com/logos-co/private-airdrop/issues)
+- Documentation: [Full docs](https://docs.lez.logos.xyz/private-airdrop)
+- Discord: [Logos Developer Community](https://discord.gg/logos)
+
+## 🎬 Video Demo
+
+See the included `demo.mp4` for a walkthrough of:
+- Setting up an airdrop
+- Generating claims
+- Submitting via mini-app
+- Verifying privacy guarantees
+
+---
+
+**Built for the Logos Execution Zone** 🚀
