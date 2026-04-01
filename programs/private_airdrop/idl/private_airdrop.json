@@ -1,0 +1,302 @@
+{
+  "version": "0.1.0",
+  "name": "private_airdrop",
+  "instructions": [
+    {
+      "name": "initialize",
+      "discriminator": [0, 0, 0, 0, 1, 0, 0, 0],
+      "accounts": [
+        {
+          "name": "distributor",
+          "isMut": true,
+          "isSigner": true,
+          "description": "The account initializing the airdrop"
+        },
+        {
+          "name": "airdrop_definition",
+          "isMut": true,
+          "isSigner": false,
+          "description": "The airdrop definition account storing merkle root and metadata"
+        },
+        {
+          "name": "token_definition",
+          "isMut": false,
+          "isSigner": false,
+          "description": "Reference to the token being distributed"
+        },
+        {
+          "name": "system_program",
+          "isMut": false,
+          "isSigner": false,
+          "description": "System program for account creation"
+        }
+      ],
+      "args": [
+        {
+          "name": "merkle_root",
+          "type": "[u8; 32]",
+          "description": "Merkle root of the eligibility tree"
+        },
+        {
+          "name": "total_amount",
+          "type": "u64",
+          "description": "Total amount of tokens to distribute"
+        },
+        {
+          "name": "recipient_count",
+          "type": "u64",
+          "description": "Number of eligible recipients"
+        },
+        {
+          "name": "metadata",
+          "type": "string",
+          "description": "Optional metadata about the airdrop"
+        }
+      ],
+      "returns": "Result<AirdropDefinitionId>"
+    },
+    {
+      "name": "claim",
+      "discriminator": [0, 0, 0, 0, 2, 0, 0, 0],
+      "accounts": [
+        {
+          "name": "claimant",
+          "isMut": true,
+          "isSigner": true,
+          "description": "The account claiming the airdrop (shielded account)"
+        },
+        {
+          "name": "airdrop_definition",
+          "isMut": true,
+          "isSigner": false,
+          "description": "The airdrop definition account"
+        },
+        {
+          "name": "nullifier_registry",
+          "isMut": true,
+          "isSigner": false,
+          "description": "Registry tracking spent nullifiers"
+        },
+        {
+          "name": "token_vault",
+          "isMut": true,
+          "isSigner": false,
+          "description": "Vault holding airdrop tokens"
+        },
+        {
+          "name": "claimant_token_account",
+          "isMut": true,
+          "isSigner": false,
+          "description": "Recipient's token account (shielded)"
+        }
+      ],
+      "args": [
+        {
+          "name": "nullifier",
+          "type": "[u8; 32]",
+          "description": "Nullifier to prevent double-claims"
+        },
+        {
+          "name": "amount_commitment",
+          "type": "[u8; 32]",
+          "description": "Commitment to the claimed amount"
+        },
+        {
+          "name": "proof_receipt",
+          "type": "Vec<u8>",
+          "description": "Risc0 proof receipt bytes"
+        }
+      ],
+      "returns": "Result<ClaimReceipt>"
+    },
+    {
+      "name": "finalize",
+      "discriminator": [0, 0, 0, 0, 3, 0, 0, 0],
+      "accounts": [
+        {
+          "name": "distributor",
+          "isMut": true,
+          "isSigner": true,
+          "description": "The distributor account"
+        },
+        {
+          "name": "airdrop_definition",
+          "isMut": true,
+          "isSigner": false,
+          "description": "The airdrop definition account"
+        },
+        {
+          "name": "token_vault",
+          "isMut": true,
+          "isSigner": false,
+          "description": "Vault returning unclaimed tokens"
+        }
+      ],
+      "args": [],
+      "returns": "Result<UnclaimedAmount>"
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AirdropDefinition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "Pubkey",
+            "description": "Unique identifier for this airdrop"
+          },
+          {
+            "name": "distributor",
+            "type": "Pubkey",
+            "description": "Account that created this airdrop"
+          },
+          {
+            "name": "token_definition",
+            "type": "Pubkey",
+            "description": "Token being distributed"
+          },
+          {
+            "name": "merkle_root",
+            "type": "[u8; 32]",
+            "description": "Merkle root of eligibility tree"
+          },
+          {
+            "name": "total_amount",
+            "type": "u64",
+            "description": "Total allocation"
+          },
+          {
+            "name": "claimed_amount",
+            "type": "u64",
+            "description": "Amount already claimed"
+          },
+          {
+            "name": "recipient_count",
+            "type": "u64",
+            "description": "Number of eligible recipients"
+          },
+          {
+            "name": "claimed_count",
+            "type": "u64",
+            "description": "Number of claims made"
+          },
+          {
+            "name": "metadata",
+            "type": "string",
+            "description": "Optional metadata"
+          },
+          {
+            "name": "timestamp",
+            "type": "u64",
+            "description": "Creation timestamp"
+          },
+          {
+            "name": "is_active",
+            "type": "bool",
+            "description": "Whether airdrop is still active"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NullifierRegistry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "airdrop_definition",
+            "type": "Pubkey",
+            "description": "Associated airdrop"
+          },
+          {
+            "name": "spent_nullifiers",
+            "type": "Vec<[u8; 32]>",
+            "description": "List of spent nullifiers"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "AirdropConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "merkle_root", "type": "[u8; 32]" },
+          { "name": "total_amount", "type": "u64" },
+          { "name": "recipient_count", "type": "u64" },
+          { "name": "metadata", "type": "string" }
+        ]
+      }
+    },
+    {
+      "name": "ClaimReceipt",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "airdrop_id", "type": "Pubkey" },
+          { "name": "nullifier", "type": "[u8; 32]" },
+          { "name": "amount", "type": "u64" },
+          { "name": "timestamp", "type": "u64" },
+          { "name": "tx_hash", "type": "String" }
+        ]
+      }
+    },
+    {
+      "name": "ZkProofInputs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "merkle_root", "type": "[u8; 32]" },
+          { "name": "nullifier", "type": "[u8; 32]" },
+          { "name": "amount_commitment", "type": "[u8; 32]" }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "InvalidProof",
+      "msg": "Zero-knowledge proof verification failed"
+    },
+    {
+      "code": 1,
+      "name": "DoubleClaim",
+      "msg": "This nullifier has already been used"
+    },
+    {
+      "code": 2,
+      "name": "InvalidMerkleProof",
+      "msg": "Merkle proof does not match committed root"
+    },
+    {
+      "code": 3,
+      "name": "AirdropInactive",
+      "msg": "This airdrop is no longer active"
+    },
+    {
+      "code": 4,
+      "name": "InsufficientFunds",
+      "msg": "Token vault has insufficient funds"
+    },
+    {
+      "code": 5,
+      "name": "InvalidAmount",
+      "msg": "Claimed amount is invalid or out of range"
+    },
+    {
+      "code": 6,
+      "name": "ProofGenerationFailed",
+      "msg": "Failed to generate zero-knowledge proof"
+    }
+  ],
+  "metadata": {
+    "description": "Private Airdrop Program for LEZ - Enables privacy-preserving token distributions using Merkle commitments and Risc0 zero-knowledge proofs",
+    "repository": "https://github.com/logos-co/private-airdrop",
+    "license": "MIT"
+  }
+}
