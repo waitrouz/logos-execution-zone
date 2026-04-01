@@ -1,14 +1,22 @@
-.gitconfig
-res/
+```
+# Dependencies
 target/
-deps/
-data/
-.idea/
+Cargo.lock
+
+# Logs and temp files
+*.log
+*.tmp
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
 .vscode/
-rocksdb
-sequencer/service/data/
-storage.json
-result
-wallet-ffi/wallet_ffi.h
-bedrock_signing_key
-integration_tests/configs/debug/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+```
